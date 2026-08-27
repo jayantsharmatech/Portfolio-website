@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jayant Sharma — CSE Undergrad @ KIET</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            obs: '#0B0F19',
+            'e-cyan': '#00F2FE',
+            neural: '#4FACFE',
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cyan: #00F2FE;
+      --neural: #4FACFE;
+      --obs: #0B0F19;
+      --surface: rgba(255,255,255,0.035);
+      --border: rgba(0,242,254,0.14);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--obs);
+      color: #e2e8f0;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      cursor: none;
+    }
+    @media (pointer: coarse) { body { cursor: auto; } }
+
+    #canvas-bg {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none; display: block;
+    }
+    .content-layer { position: relative; z-index: 1; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: var(--obs); }
+    ::-webkit-scrollbar-thumb { background: var(--neural); border-radius: 2px; }
+
+    /* Custom cursor */
+    #cursor-dot {
+      position: fixed; width: 7px; height: 7px;
+      background: var(--cyan); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: opacity .2s;
+    }
+    #cursor-ring {
+      position: fixed; width: 30px; height: 30px;
+      border: 1px solid rgba(0,242,254,.45);
+      border-radius: 50%; pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%);
+      transition: width .2s, height .2s, border-color .2s;
+    }
+    @media (pointer: coarse) { #cursor-dot, #cursor-ring { display: none; } }
+
+    /* Progress bar */
+    #progress-bar {
+      position: fixed; top: 0; left: 0; height: 2px; z-index: 1000;
+      background: linear-gradient(90deg, var(--neural), var(--cyan));
+      transition: width .1s linear; width: 0;
+    }
+
+    /* Nav */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(11,15,25,.72);
+      border-bottom: 1px solid rgba(0,242,254,.07);
+    }
+    .nav-link {
+      position: relative;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .78rem; color: #94a3b8;
+      transition: color .2s; text-decoration: none;
+    }
+    .nav-link::after {
+      content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+      height: 1px; background: var(--cyan);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform .25s cubic-bezier(.16,1,.3,1);
+    }
+    .nav-link:hover { color: var(--cyan); }
+    .nav-link:hover::after { transform: scaleX(1); }
+
+    /* Glass card */
+    .glass-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-radius: 12px;
+      transition: transform .3s cubic-bezier(.16,1,.3,1), border-color .3s, box-shadow .3s;
+    }
+    .glass-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      border-color: rgba(0,242,254,.38);
+      box-shadow: 0 0 36px rgba(0,242,254,.07);
+    }
+
+    /* Pillar card */
+    .pillar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      transition: transform .32s cubic-bezier(.16,1,.3,1), border-color .3s, box-shadow .3s;
+    }
+    .pillar:hover { transform: translateY(-7px); }
+    .pillar.p-cyan:hover  { border-color: rgba(0,242,254,.5);   box-shadow: 0 10px 44px rgba(0,242,254,.1); }
+    .pillar.p-blue:hover  { border-color: rgba(79,172,254,.5);  box-shadow: 0 10px 44px rgba(79,172,254,.1); }
+    .pillar.p-green:hover { border-color: rgba(16,185,129,.5);  box-shadow: 0 10px 44px rgba(16,185,129,.1); }
+    .pillar.p-violet:hover{ border-color: rgba(139,92,246,.5);  box-shadow: 0 10px 44px rgba(139,92,246,.1); }
+
+    /* Tag chip */
+    .chip {
+      display: inline-flex; align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .67rem; padding: 3px 9px;
+      border-radius: 4px; border: 1px solid;
+    }
+
+    /* Skill bar */
+    .skill-fill {
+      height: 100%; border-radius: 3px;
+      background: linear-gradient(90deg, var(--neural), var(--cyan));
+      width: 0; transition: width 1.3s cubic-bezier(.16,1,.3,1);
+    }
+
+    /* Gradient text */
+    .grad {
+      background: linear-gradient(130deg, #fff 0%, var(--neural) 50%, var(--cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Section label */
+    .slabel {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .72rem; letter-spacing: .15em;
+      color: var(--cyan); text-transform: uppercase;
+    }
+
+    /* Reveal */
+    .rev {
+      opacity: 0; transform: translateY(26px);
+      transition: opacity .7s ease, transform .7s cubic-bezier(.16,1,.3,1);
+    }
+    .rev.in { opacity: 1; transform: none; }
+    .rev.d1 { transition-delay: .1s; }
+    .rev.d2 { transition-delay: .2s; }
+    .rev.d3 { transition-delay: .3s; }
+    .rev.d4 { transition-delay: .4s; }
+
+    /* Pulse */
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.35; } }
+    .pulsed { animation: pulse 2.2s ease-in-out infinite; }
+
+    /* Timeline dot */
+    .tdot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--cyan); flex-shrink: 0;
+      box-shadow: 0 0 9px rgba(0,242,254,.5);
+      margin-top: 5px;
+    }
+
+    /* Contact link */
+    .clink {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px; border-radius: 10px;
+      border: 1px solid rgba(0,242,254,.1);
+      background: rgba(255,255,255,.02);
+      transition: all .25s cubic-bezier(.16,1,.3,1);
+      text-decoration: none; color: inherit;
+    }
+    .clink:hover {
+      border-color: rgba(0,242,254,.38);
+      background: rgba(0,242,254,.04);
+      transform: translateX(7px);
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,242,254,.13), transparent);
+      margin: 0 24px;
+    }
+
+    /* Mobile menu */
+    #mob-menu { display: none; }
+    #mob-menu.open { display: flex; }
+
+    /* Scroll mouse SVG animation */
+    @keyframes scrolldown { 0%,100%{opacity:1;cy:9} 50%{opacity:0;cy:18} }
+    #scroll-dot { animation: scrolldown 2s ease-in-out infinite; }
+  </style>
+</head>
+<body class="bg-[#0B0F19]">
+  <!-- Three.js background canvas -->
+  <canvas id="canvas-bg"></canvas>
+
+  <!-- Cursor -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <!-- Progress bar -->
+  <div id="progress-bar"></div>
+
+  <!-- ══════════════ NAV ══════════════ -->
+  <nav id="nav">
+    <div class="max-w-6xl mx-auto px-6 flex items-center justify-between h-16">
+      <a href="#hero" class="font-mono text-sm no-underline" style="color:var(--cyan)">
+        <span style="color:#475569">~/</span>kernel_jayant
+      </a>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#about"     class="nav-link">About</a>
+        <a href="#pillars"   class="nav-link">Expertise</a>
+        <a href="#projects"  class="nav-link">Milestones</a>
+        <a href="#education" class="nav-link">Education</a>
+        <a href="#contact"   class="nav-link">Contact</a>
+      </div>
+      <button id="hamburger" class="md:hidden p-2 flex flex-col gap-[5px]">
+        <span class="w-5 h-px bg-slate-400 block"></span>
+        <span class="w-5 h-px bg-slate-400 block"></span>
+        <span class="w-5 h-px bg-slate-400 block"></span>
+      </button>
+    </div>
+    <!-- Mobile menu -->
+    <div id="mob-menu" class="md:hidden flex-col px-6 pb-5 gap-3 border-t border-white/5">
+      <a href="#about"     class="nav-link py-2 block">about</a>
+      <a href="#pillars"   class="nav-link py-2 block">expertise</a>
+      <a href="#projects"  class="nav-link py-2 block">milestones</a>
+      <a href="#education" class="nav-link py-2 block">education</a>
+      <a href="#contact"   class="nav-link py-2 block">contact</a>
+    </div>
+  </nav>
+
+  <div class="content-layer">
+    <!-- ══════════════ HERO ══════════════ -->
+    <section id="hero" class="min-h-[100dvh] flex flex-col items-center justify-center px-6 text-center relative">
+      <div class="max-w-3xl mx-auto">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 mb-7 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm rev">
+          <span class="pulsed w-2 h-2 rounded-full block" style="background:var(--cyan)"></span>
+          <span class="font-mono text-xs text-slate-400">Competitive Programmer</span>
+          <span class="text-slate-600">·</span>
+          <span class="font-mono text-xs" style="color:var(--cyan)">CodeChef, Codeforces &amp; AtCoder</span>
+        </div>
+
+        <!-- Name -->
+        <h1 class="text-5xl sm:text-7xl font-black tracking-tight mb-3 rev d1 grad">
+          Jayant Sharma
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="font-mono text-base sm:text-lg text-slate-400 mb-1 rev d2">
+          B.Tech CSE · KIET Group of Institutions · 2025–2029
+        </p>
+        <p class="font-mono text-sm mb-10 rev d2" style="color:var(--neural)">
+          Ghaziabad, Uttar Pradesh, India
+        </p>
+
+        <!-- Stats -->
+        <div class="flex flex-wrap justify-center gap-6 mb-12 rev d3">
+          <div class="text-center">
+            <div class="text-2xl font-black" style="color:var(--cyan)">C/C++</div>
+            <div class="text-xs text-slate-500 font-mono">Core Logic</div>
+          </div>
+          <div class="w-px h-10 self-center bg-white/10"></div>
+          <div class="text-center">
+            <div class="text-2xl font-black" style="color:#10b981">DSA</div>
+            <div class="text-xs text-slate-500 font-mono">Algorithms</div>
+          </div>
+          <div class="w-px h-10 self-center bg-white/10"></div>
+          <div class="text-center">
+            <div class="text-2xl font-black" style="color:var(--neural)">Cloud</div>
+            <div class="text-xs text-slate-500 font-mono">Architecture</div>
+          </div>
+          <div class="w-px h-10 self-center bg-white/10"></div>
+          <div class="text-center">
+            <div class="text-2xl font-black" style="color:#8b5cf6">AI/ML</div>
+            <div class="text-xs text-slate-500 font-mono">Development</div>
+          </div>
+        </div>
+
+        <!-- CTAs -->
+        <div class="flex flex-wrap justify-center gap-4 rev d4">
+          <a href="#projects" class="px-6 py-3 rounded-lg font-mono text-sm font-semibold transition-all hover:scale-105"
+             style="background:linear-gradient(135deg,var(--neural),var(--cyan));color:#0B0F19">
+            View Milestones
+          </a>
+          <a href="#contact" class="px-6 py-3 rounded-lg font-mono text-sm border transition-all hover:scale-105"
+             style="border-color:var(--border);color:var(--cyan);background:rgba(0,242,254,.05)">
+            Get in Touch
+          </a>
+        </div>
+      </div>
+
+      <!-- Scroll indicator -->
+      <div class="absolute bottom-10 left-1/2 -translate-x-1/2">
+        <svg width="20" height="32" viewBox="0 0 20 32" fill="none">
+          <rect x="1" y="1" width="18" height="30" rx="9" stroke="rgba(0,242,254,.3)" stroke-width="1.5"/>
+          <circle id="scroll-dot" cx="10" cy="9" r="3" fill="rgba(0,242,254,.65)"/>
+        </svg>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════ ABOUT / SKILLS ══════════════ -->
+    <section id="about" class="py-24 px-6">
+      <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-14 items-start">
+        <!-- Bio -->
+        <div>
+          <p class="slabel mb-4 rev">About</p>
+          <h2 class="text-3xl sm:text-4xl font-bold mb-6 leading-tight rev d1">
+            Building at the intersection of<br/>
+            <span style="color:var(--cyan)">algorithms &amp; intelligence.</span>
+          </h2>
+          <div class="space-y-4 text-slate-400 leading-relaxed text-sm rev d2">
+            <p>
+              First-year B.Tech CSE student at KIET Group of Institutions, Ghaziabad — focused on
+              Data Structures, Algorithmic Logic, and Artificial Intelligence. I am an active
+              competitive programmer with over 270 questions solved and 24 global contests attended, 
+              emphasizing complexity analysis and memory management using advanced C++ and C.
+            </p>
+            <p>
+              Beyond the terminal, I am expanding my development skills in Machine Learning environments
+              and modern cloud architecture. When I'm taking a break from problem-solving and coding,
+              you can usually find me at the table tennis court.
+            </p>
+          </div>
+          <!-- Org badges -->
+          <div class="mt-8 flex flex-wrap gap-3 rev d3">
+            <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.05)">DevUp Club · KIET</span>
+            <span class="chip" style="border-color:rgba(79,172,254,.22);color:var(--neural);background:rgba(79,172,254,.05)">NSS KIET</span>
+          </div>
+        </div>
+
+        <!-- Skill bars -->
+        <div>
+          <p class="slabel mb-6 rev">Technical Skills</p>
+          <div id="skill-section" class="space-y-4 rev d1">
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="font-mono text-sm text-slate-300">C++ (Core Logic)</span>
+                <span class="font-mono text-sm" style="color:var(--cyan)">95%</span>
+              </div>
+              <div class="h-1.5 rounded-full bg-white/5">
+                <div class="skill-fill" data-w="95%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="font-mono text-sm text-slate-300">Data Structures &amp; Algorithms</span>
+                <span class="font-mono text-sm" style="color:var(--cyan)">90%</span>
+              </div>
+              <div class="h-1.5 rounded-full bg-white/5">
+                <div class="skill-fill" data-w="90%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="font-mono text-sm text-slate-300">C</span>
+                <span class="font-mono text-sm" style="color:var(--cyan)">85%</span>
+              </div>
+              <div class="h-1.5 rounded-full bg-white/5">
+                <div class="skill-fill" data-w="85%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="font-mono text-sm text-slate-300">Artificial Intelligence &amp; ML</span>
+                <span class="font-mono text-sm" style="color:#10b981">80%</span>
+              </div>
+              <div class="h-1.5 rounded-full bg-white/5">
+                <div class="skill-fill" data-w="80%" style="background:linear-gradient(90deg,#059669,#10b981)"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="font-mono text-sm text-slate-300">Cloud Architecture</span>
+                <span class="font-mono text-sm" style="color:#10b981">75%</span>
+              </div>
+              <div class="h-1.5 rounded-full bg-white/5">
+                <div class="skill-fill" data-w="75%" style="background:linear-gradient(90deg,#059669,#10b981)"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="font-mono text-sm text-slate-300">Git / GitHub</span>
+                <span class="font-mono text-sm" style="color:#8b5cf6">85%</span>
+              </div>
+              <div class="h-1.5 rounded-full bg-white/5">
+                <div class="skill-fill" data-w="85%" style="background:linear-gradient(90deg,#6d28d9,#8b5cf6)"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="font-mono text-sm text-slate-300">Competitive Programming</span>
+                <span class="font-mono text-sm" style="color:#8b5cf6">88%</span>
+              </div>
+              <div class="h-1.5 rounded-full bg-white/5">
+                <div class="skill-fill" data-w="88%" style="background:linear-gradient(90deg,#6d28d9,#8b5cf6)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════ FOUR PILLARS ══════════════ -->
+    <section id="pillars" class="py-24 px-6">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-14">
+          <p class="slabel mb-3 rev">Core Expertise</p>
+          <h2 class="text-3xl sm:text-4xl font-bold rev d1">Four Pillars</h2>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+          <!-- 1. Competitive Programming -->
+          <div class="pillar p-cyan p-6 rev">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(0,242,254,.1)">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="3" stroke="#00F2FE" stroke-width="1.5"/>
+                <path d="M8 9l3 3-3 3M13 15h3" stroke="#00F2FE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3 class="font-bold text-lg mb-2" style="color:var(--cyan)">Competitive Programming</h3>
+            <p class="text-sm text-slate-400 leading-relaxed mb-4">
+              Active competitor with 270+ algorithmic problems solved and 24 contests attended.
+              Proven performance across CodeChef, Codeforces, and AtCoder with a strong emphasis on writing optimized C/C++ logic.
+            </p>
+            <div class="flex flex-wrap gap-1.5">
+              <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.05)">C++</span>
+              <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.05)">CodeChef</span>
+              <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.05)">AtCoder</span>
+            </div>
+          </div>
+
+          <!-- 2. Data Structures & Algorithms -->
+          <div class="pillar p-green p-6 rev d1">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(16,185,129,.1)">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                <rect x="4" y="8" width="16" height="9" rx="2" stroke="#10b981" stroke-width="1.5"/>
+                <path d="M8 8V6a2 2 0 014 0v2M14 8V6a2 2 0 014 0" stroke="#10b981" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="12" cy="12.5" r="1.8" stroke="#10b981" stroke-width="1.5"/>
+              </svg>
+            </div>
+            <h3 class="font-bold text-lg mb-2" style="color:#10b981">Data Structures</h3>
+            <p class="text-sm text-slate-400 leading-relaxed mb-4">
+              Building a strong foundation in core computer science concepts. Focusing on efficient 
+              data manipulation to solve complex, scale-level computational problems.
+            </p>
+            <div class="flex flex-wrap gap-1.5">
+              <span class="chip" style="border-color:rgba(16,185,129,.22);color:#10b981;background:rgba(16,185,129,.05)">DSA</span>
+              <span class="chip" style="border-color:rgba(16,185,129,.22);color:#10b981;background:rgba(16,185,129,.05)">Trees &amp; Graphs</span>
+              <span class="chip" style="border-color:rgba(16,185,129,.22);color:#10b981;background:rgba(16,185,129,.05)">Optimization</span>
+            </div>
+          </div>
+
+          <!-- 3. AI / ML -->
+          <div class="pillar p-blue p-6 rev d2">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(79,172,254,.1)">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                <circle cx="12" cy="5" r="2" stroke="#4FACFE" stroke-width="1.5"/>
+                <circle cx="5" cy="19" r="2" stroke="#4FACFE" stroke-width="1.5"/>
+                <circle cx="19" cy="19" r="2" stroke="#4FACFE" stroke-width="1.5"/>
+                <path d="M12 7L5 17M12 7l7 10M6.5 19h11" stroke="#4FACFE" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3 class="font-bold text-lg mb-2" style="color:var(--neural)">AI / ML Development</h3>
+            <p class="text-sm text-slate-400 leading-relaxed mb-4">
+              Exploring intelligent workflows and applying machine learning fundamentals to understand 
+              predictive models, data science, and automated decision systems.
+            </p>
+            <div class="flex flex-wrap gap-1.5">
+              <span class="chip" style="border-color:rgba(79,172,254,.22);color:var(--neural);background:rgba(79,172,254,.05)">Machine Learning</span>
+              <span class="chip" style="border-color:rgba(79,172,254,.22);color:var(--neural);background:rgba(79,172,254,.05)">Data Science</span>
+            </div>
+          </div>
+
+          <!-- 4. Cloud Architecture -->
+          <div class="pillar p-violet p-6 rev d3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(139,92,246,.1)">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline points="16 7 22 7 22 13" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3 class="font-bold text-lg mb-2" style="color:#8b5cf6">Cloud &amp; Web Services</h3>
+            <p class="text-sm text-slate-400 leading-relaxed mb-4">
+              Expanding technical breadth through hands-on application of cloud architecture 
+              principles and modern web services designed for scale and efficiency.
+            </p>
+            <div class="flex flex-wrap gap-1.5">
+              <span class="chip" style="border-color:rgba(139,92,246,.22);color:#8b5cf6;background:rgba(139,92,246,.05)">Cloud Infrastructure</span>
+              <span class="chip" style="border-color:rgba(139,92,246,.22);color:#8b5cf6;background:rgba(139,92,246,.05)">Web Services</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════ PROJECTS & MILESTONES ══════════════ -->
+    <section id="projects" class="py-24 px-6">
+      <div class="max-w-6xl mx-auto">
+        <div class="mb-14">
+          <p class="slabel mb-3 rev">Milestones &amp; Applied Learning</p>
+          <h2 class="text-3xl sm:text-4xl font-bold rev d1">Technical Achievements.</h2>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6">
+
+          <!-- Milestone 1: Competitive Programming Stats -->
+          <div class="glass-card p-8 rev">
+            <div class="flex items-start justify-between mb-5">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center"
+                   style="background:rgba(0,242,254,.1);border:1px solid rgba(0,242,254,.2)">
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                  <path d="M4 6h16M4 10h16M4 14h10M4 18h7" stroke="#00F2FE" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.06)">CP · @Kernel_Jayant</span>
+            </div>
+            <h3 class="font-bold text-xl mb-3 text-white">Competitive Programming Record</h3>
+            <p class="text-slate-400 text-sm leading-relaxed mb-6">
+              Maintained a rigorous algorithmic streak with <strong>271 questions solved</strong> across 111 active days. Competed in <strong>24 global contests</strong>, specializing heavily in Arrays, Math, and Bit Manipulation topics.
+            </p>
+            <div class="grid grid-cols-2 gap-y-4 gap-x-2 mb-6">
+              <div>
+                <span class="block text-slate-500 font-mono text-[0.65rem] uppercase tracking-wider mb-1">CodeChef</span>
+                <span class="text-white text-sm font-semibold">Max Rating: 1212</span>
+              </div>
+              <div>
+                <span class="block text-slate-500 font-mono text-[0.65rem] uppercase tracking-wider mb-1">Codeforces</span>
+                <span class="text-white text-sm font-semibold">Newbie (Max: 882)</span>
+              </div>
+              <div>
+                <span class="block text-slate-500 font-mono text-[0.65rem] uppercase tracking-wider mb-1">AtCoder</span>
+                <span class="text-white text-sm font-semibold">Max Rating: 101</span>
+              </div>
+              <div>
+                <span class="block text-slate-500 font-mono text-[0.65rem] uppercase tracking-wider mb-1"></span>
+                <span class="text-white text-sm font-semibold"></span>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.05)">271 Solved</span>
+              <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.05)">24 Contests</span>
+              <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.05)">111 Active Days</span>
+            </div>
+          </div>
+
+          <!-- Milestone 2: Cloud Workshop -->
+          <div class="glass-card p-8 rev d1">
+            <div class="flex items-start justify-between mb-5">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center"
+                   style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2)">
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                  <path d="M2 12h2l3-7 4 14 3-10 2 3h6" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="chip" style="border-color:rgba(16,185,129,.22);color:#10b981;background:rgba(16,185,129,.06)">Cloud · Web Services</span>
+            </div>
+            <h3 class="font-bold text-xl mb-3 text-white">Cloud Architecture Immersion</h3>
+            <p class="text-slate-400 text-sm leading-relaxed mb-5">
+              Participated in a comprehensive 3-day campus technology workshop (March 23-25, 2026). 
+              Gained hands-on experience in modern cloud infrastructure, web service deployment, 
+              and understanding scalable architecture frameworks for future application development.
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <span class="chip" style="border-color:rgba(16,185,129,.22);color:#10b981;background:rgba(16,185,129,.05)">Cloud Computing</span>
+              <span class="chip" style="border-color:rgba(16,185,129,.22);color:#10b981;background:rgba(16,185,129,.05)">Workshops</span>
+              <span class="chip" style="border-color:rgba(16,185,129,.22);color:#10b981;background:rgba(16,185,129,.05)">Scalability</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════ EDUCATION & EXPERIENCE ══════════════ -->
+    <section id="education" class="py-24 px-6">
+      <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-14">
+
+        <!-- Education -->
+        <div>
+          <p class="slabel mb-8 rev">Education</p>
+          <div class="glass-card p-6 rev d1">
+            <div class="flex items-start gap-4">
+              <div class="tdot"></div>
+              <div class="flex-1">
+                <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
+                  <h3 class="font-bold text-white">KIET Group of Institutions</h3>
+                  <span class="font-mono text-xs text-slate-500">2025 – 2029</span>
+                </div>
+                <p class="text-sm font-semibold mb-1" style="color:var(--neural)">
+                  B.Tech in Computer Science and Engineering
+                </p>
+                <p class="text-xs text-slate-500 mb-3">Ghaziabad, Uttar Pradesh</p>
+                <p class="text-sm text-slate-400 leading-relaxed">
+                  Focusing on Data Structures, Algorithmic Logic, and Artificial Intelligence concepts. 
+                  Active in competitive programming, tech club initiatives, and preparing to expand my capabilities 
+                  in machine learning environments.
+                </p>
+                <div class="flex flex-wrap gap-1.5 mt-4">
+                  <span class="chip" style="border-color:rgba(0,242,254,.18);color:var(--cyan);background:rgba(0,242,254,.04)">Data Structures</span>
+                  <span class="chip" style="border-color:rgba(0,242,254,.18);color:var(--cyan);background:rgba(0,242,254,.04)">Algorithms</span>
+                  <span class="chip" style="border-color:rgba(0,242,254,.18);color:var(--cyan);background:rgba(0,242,254,.04)">AI/ML</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Experience & Leadership -->
+        <div>
+          <p class="slabel mb-8 rev">Experience &amp; Leadership</p>
+          <div class="space-y-4">
+
+            <div class="glass-card p-6 rev d1">
+              <div class="flex items-start gap-4">
+                <div class="tdot" style="background:var(--neural);box-shadow:0 0 9px rgba(79,172,254,.5)"></div>
+                <div class="flex-1">
+                  <div class="flex flex-wrap items-start justify-between gap-2 mb-1">
+                    <h3 class="font-semibold text-white text-sm">DevUp Club · KIET</h3>
+                    <span class="font-mono text-xs text-slate-500">Nov 2025 – Present</span>
+                  </div>
+                  <p class="text-xs font-semibold mb-2" style="color:var(--neural)">Technical Club Member</p>
+                  <p class="text-sm text-slate-400 leading-relaxed">
+                    Collaborating with peers on technical initiatives, participating in skill-building workshops, 
+                    and actively expanding development skills in emerging tech ecosystems.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="glass-card p-6 rev d2">
+              <div class="flex items-start gap-4">
+                <div class="tdot" style="background:#10b981;box-shadow:0 0 9px rgba(16,185,129,.5)"></div>
+                <div class="flex-1">
+                  <div class="flex flex-wrap items-start justify-between gap-2 mb-1">
+                    <h3 class="font-semibold text-white text-sm">NSS KIET</h3>
+                    <span class="font-mono text-xs text-slate-500">Nov 2025 – Present</span>
+                  </div>
+                  <p class="text-xs font-semibold mb-2" style="color:#10b981">Student Volunteer</p>
+                  <p class="text-sm text-slate-400 leading-relaxed">
+                    Actively participating in social service initiatives and driving team-based community 
+                    development programs across the campus.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════ CONTACT ══════════════ -->
+    <section id="contact" class="py-24 px-6">
+      <div class="max-w-xl mx-auto text-center">
+        <p class="slabel mb-4 rev">Contact & Profiles</p>
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4 rev d1">Let's connect.</h2>
+        <p class="text-slate-400 text-sm mb-12 rev d2">
+          Reach out to me for discussions on algorithms, machine learning development, or check out my competitive programming profiles below.
+        </p>
+        
+        <!-- Socials & CP Links Container -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left rev d3">
+
+          <a href="mailto:your.email@example.com" class="clink">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+              <rect x="2" y="4" width="20" height="16" rx="3" stroke="var(--cyan)" stroke-width="1.5"/>
+              <path d="M2 8l10 7 10-7" stroke="var(--cyan)" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span class="font-mono text-xs text-slate-300">jayantsharma.tech@gmail.com</span>
+            <span class="ml-auto text-slate-600 text-xs">↗</span>
+          </a>
+
+          <a href="https://linkedin.com/in/jayant-sharma-6a9684381" target="_blank" rel="noopener" class="clink">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+              <rect x="2" y="2" width="20" height="20" rx="4" stroke="var(--neural)" stroke-width="1.5"/>
+              <path d="M7 10v7M7 7.5V7" stroke="var(--neural)" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M11 17v-4c0-1.1.9-2 2-2s2 .9 2 2v4M11 10v7" stroke="var(--neural)" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span class="font-mono text-xs text-slate-300">LinkedIn Profile</span>
+            <span class="ml-auto text-slate-600 text-xs">↗</span>
+          </a>
+
+          <!-- CodeChef -->
+          <a href="https://www.codechef.com/users/Kernel_Jayant" target="_blank" rel="noopener" class="clink">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+              <path d="M6 8L12 2L18 8M6 16L12 22L18 16" stroke="var(--cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="font-mono text-xs text-slate-300">CodeChef: @Kernel_Jayant</span>
+            <span class="ml-auto text-slate-600 text-xs">↗</span>
+          </a>
+
+          <!-- Codeforces -->
+          <a href="https://codeforces.com/profile/Kernel_Jayant" target="_blank" rel="noopener" class="clink">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+              <rect x="4" y="14" width="4" height="6" fill="var(--cyan)"/>
+              <rect x="10" y="10" width="4" height="10" fill="var(--cyan)"/>
+              <rect x="16" y="4" width="4" height="16" fill="var(--cyan)"/>
+            </svg>
+            <span class="font-mono text-xs text-slate-300">CF: @Kernel_Jayant</span>
+            <span class="ml-auto text-slate-600 text-xs">↗</span>
+          </a>
+
+          <!-- AtCoder -->
+          <a href="https://atcoder.jp/users/Kernel_Jayant" target="_blank" rel="noopener" class="clink">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" stroke="var(--cyan)" stroke-width="1.5"/>
+              <path d="M12 6v12M8 10l8 4" stroke="var(--cyan)" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span class="font-mono text-xs text-slate-300">AtCoder: @Kernel_Jayant</span>
+            <span class="ml-auto text-slate-600 text-xs">↗</span>
+          </a>
+          
+          <a href="https://github.com/jayantsharmatech" target="_blank" rel="noopener" class="clink">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#8b5cf6">
+              <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.929.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+            </svg>
+            <span class="font-mono text-xs text-slate-300">GitHub Profile</span>
+            <span class="ml-auto text-slate-600 text-xs">↗</span>
+          </a>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 px-6 text-center border-t border-white/5">
+      <p class="font-mono text-xs text-slate-600">
+             © 2026 Jayant Sharma · KIET Group of Institutions 
+      </p>
+    </footer>
+  </div><!-- /content-layer -->
+
+  <!-- ══════════════ SCRIPTS ══════════════ -->
+  <script>
+  (function() {
+    // ── Progress bar ──────────────────────────────────────────────
+    var pb = document.getElementById('progress-bar');
+    window.addEventListener('scroll', function() {
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      pb.style.width = (max > 0 ? (window.scrollY / max * 100) : 0) + '%';
+    });
+
+    // ── Custom cursor ─────────────────────────────────────────────
+    var dot  = document.getElementById('cursor-dot');
+    var ring = document.getElementById('cursor-ring');
+    var cx = 0, cy = 0, rx = 0, ry = 0;
+
+    document.addEventListener('mousemove', function(e) {
+      cx = e.clientX; cy = e.clientY;
+      dot.style.left = cx + 'px';
+      dot.style.top  = cy + 'px';
+    });
+    (function animRing() {
+      rx += (cx - rx) * 0.12;
+      ry += (cy - ry) * 0.12;
+      ring.style.left = rx + 'px';
+      ring.style.top  = ry + 'px';
+      requestAnimationFrame(animRing);
+    })();
+    document.querySelectorAll('a, button').forEach(function(el) {
+      el.addEventListener('mouseenter', function() {
+        ring.style.width  = '48px';
+        ring.style.height = '48px';
+        ring.style.borderColor = 'rgba(0,242,254,.85)';
+      });
+      el.addEventListener('mouseleave', function() {
+        ring.style.width  = '30px';
+        ring.style.height = '30px';
+        ring.style.borderColor = 'rgba(0,242,254,.45)';
+      });
+    });
+
+    // ── Mobile menu ───────────────────────────────────────────────
+    var ham  = document.getElementById('hamburger');
+    var mob  = document.getElementById('mob-menu');
+    ham.addEventListener('click', function() { mob.classList.toggle('open'); });
+    mob.querySelectorAll('a').forEach(function(a) {
+      a.addEventListener('click', function() { mob.classList.remove('open'); });
+    });
+
+    // ── Reveal on scroll ──────────────────────────────────────────
+    var revObs = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
+        if (e.isIntersecting) {
+          e.target.classList.add('in');
+          revObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.10 });
+    document.querySelectorAll('.rev').forEach(function(el) { revObs.observe(el); });
+
+    // Trigger hero elements immediately (already in viewport)
+    document.querySelectorAll('#hero .rev').forEach(function(el) {
+      el.classList.add('in');
+    });
+
+    // ── Skill bars ────────────────────────────────────────────────
+    var skillObs = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
+        if (e.isIntersecting) {
+          e.target.querySelectorAll('.skill-fill').forEach(function(bar) {
+            bar.style.width = bar.dataset.w;
+          });
+          skillObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.25 });
+    var ss = document.getElementById('skill-section');
+    if (ss) skillObs.observe(ss);
+
+    // ── THREE.JS PARTICLE CONSTELLATION ──────────────────────────
+    if (!window.THREE) { console.warn('Three.js not loaded'); return; }
+
+    var canvas = document.getElementById('canvas-bg');
+    var W = window.innerWidth, H = window.innerHeight;
+    var mobile = W < 768;
+
+    var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(W, H);
+    renderer.setClearColor(0x000000, 0);
+
+    var scene  = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 1000);
+    camera.position.set(0, 0, 80);
+
+    window.addEventListener('resize', function() {
+      W = window.innerWidth; H = window.innerHeight;
+      mobile = W < 768;
+      renderer.setSize(W, H);
+      camera.aspect = W / H;
+      camera.updateProjectionMatrix();
+    });
+
+    // Particles
+    var N = mobile ? 140 : 280;
+    var MAX_DIST = mobile ? 24 : 21;
+    var MAX_LINES = 500;
+
+    var pos = new Float32Array(N * 3);
+    var vel = new Float32Array(N * 3);
+
+    for (var i = 0; i < N; i++) {
+      var i3 = i * 3;
+      pos[i3]     = (Math.random() - 0.5) * 130;
+      pos[i3 + 1] = (Math.random() - 0.5) * 130;
+      pos[i3 + 2] = (Math.random() - 0.5) * 60;
+      vel[i3]     = (Math.random() - 0.5) * 0.035;
+      vel[i3 + 1] = (Math.random() - 0.5) * 0.035;
+      vel[i3 + 2] = (Math.random() - 0.5) * 0.018;
+    }
+
+    var ptGeo = new THREE.BufferGeometry();
+    var posAttr = new THREE.BufferAttribute(pos, 3);
+    ptGeo.setAttribute('position', posAttr);
+
+    var ptMat = new THREE.PointsMaterial({
+      color: 0x4FACFE, size: mobile ? 0.5 : 0.72,
+      transparent: true, opacity: 0.85, sizeAttenuation: true
+    });
+    scene.add(new THREE.Points(ptGeo, ptMat));
+
+    // Lines
+    var linePos = new Float32Array(MAX_LINES * 6);
+    var lineCol = new Float32Array(MAX_LINES * 6);
+    var lGeo = new THREE.BufferGeometry();
+    lGeo.setAttribute('position', new THREE.BufferAttribute(linePos, 3));
+    lGeo.setAttribute('color',    new THREE.BufferAttribute(lineCol, 3));
+    var lMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.38 });
+    var lSegs = new THREE.LineSegments(lGeo, lMat);
+    scene.add(lSegs);
+
+    // Mouse / scroll state
+    var mTX = 0, mTY = 0, mX = 0, mY = 0;
+    var scrollPct = 0;
+
+    document.addEventListener('mousemove', function(e) {
+      mTX = (e.clientX / window.innerWidth  - 0.5) * 2;
+      mTY = (e.clientY / window.innerHeight - 0.5) * 2;
+    });
+    window.addEventListener('scroll', function() {
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      scrollPct = max > 0 ? window.scrollY / max : 0;
+    });
+
+    // Animate
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Lerp mouse
+      mX += (mTX - mX) * 0.045;
+      mY += (mTY - mY) * 0.045;
+
+      // Camera: scroll-driven dolly + mouse tilt
+      camera.position.z  = 80 - scrollPct * 28;
+      camera.position.y  = -scrollPct * 18;
+      camera.rotation.x  =  mY * 0.05;
+      camera.rotation.y  =  mX * 0.05;
+
+      // Update particles
+      var wMX = mX * 38, wMY = -mY * 38;
+      for (var i = 0; i < N; i++) {
+        var i3 = i * 3;
+        var dx = wMX - pos[i3], dy = wMY - pos[i3+1];
+        var d2 = dx*dx + dy*dy;
+        if (d2 < 1600) { // within 40 units
+          vel[i3]     += dx * 0.00012;
+          vel[i3 + 1] += dy * 0.00012;
+        }
+        vel[i3]     *= 0.991;
+        vel[i3 + 1] *= 0.991;
+        vel[i3 + 2] *= 0.991;
+        pos[i3]     += vel[i3];
+        pos[i3 + 1] += vel[i3 + 1];
+        pos[i3 + 2] += vel[i3 + 2];
+        // Boundary wrap
+        if (pos[i3]     >  65) pos[i3]     = -65;
+        if (pos[i3]     < -65) pos[i3]     =  65;
+        if (pos[i3 + 1] >  65) pos[i3 + 1] = -65;
+        if (pos[i3 + 1] < -65) pos[i3 + 1] =  65;
+        if (pos[i3 + 2] >  32) pos[i3 + 2] = -32;
+        if (pos[i3 + 2] < -32) pos[i3 + 2] =  32;
+      }
+      posAttr.needsUpdate = true;
+
+      // Build line segments
+      var li = 0;
+      for (var a = 0; a < N && li < MAX_LINES; a++) {
+        var a3 = a * 3;
+        for (var b = a + 1; b < N && li < MAX_LINES; b++) {
+          var b3 = b * 3;
+          var ex = pos[a3]-pos[b3], ey = pos[a3+1]-pos[b3+1], ez = pos[a3+2]-pos[b3+2];
+          var dist = Math.sqrt(ex*ex + ey*ey + ez*ez);
+          if (dist < MAX_DIST) {
+            var alpha = 1 - dist / MAX_DIST;
+            var l6 = li * 6;
+            linePos[l6]=pos[a3]; linePos[l6+1]=pos[a3+1]; linePos[l6+2]=pos[a3+2];
+            linePos[l6+3]=pos[b3]; linePos[l6+4]=pos[b3+1]; linePos[l6+5]=pos[b3+2];
+            // Cyan to neural-blue gradient
+            lineCol[l6]   = alpha * 0.31; lineCol[l6+1] = alpha * 0.95; lineCol[l6+2] = alpha;
+            lineCol[l6+3] = alpha * 0.31; lineCol[l6+4] = alpha * 0.95; lineCol[l6+5] = alpha;
+            li++;
+          }
+        }
+      }
+      lGeo.setDrawRange(0, li * 2);
+      lGeo.attributes.position.needsUpdate = true;
+      lGeo.attributes.color.needsUpdate = true;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  })();
+  </script>
+</body>
+</html>
