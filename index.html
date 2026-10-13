@@ -1,995 +1,908 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Jayant Sharma — CSE Undergrad @ KIET</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            obs: '#0B0F19',
-            'e-cyan': '#00F2FE',
-            neural: '#4FACFE',
-          },
-          fontFamily: {
-            mono: ['"JetBrains Mono"', 'monospace'],
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jayant Sharma | Competitive Programmer & AI/ML Developer</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Three.js for 3D Interactive Background -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        darkbg: '#050a14',
+                        cardbg: '#0a1224',
+                        cyanaccent: '#00f0ff',
+                        cyanbright: '#38bdf8',
+                        purpleaccent: '#a855f7',
+                        greenaccent: '#10b981',
+                        orangeaccent: '#f97316',
+                    }
+                }
+            }
         }
-      }
-    }
-  </script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --cyan: #00F2FE;
-      --neural: #4FACFE;
-      --obs: #0B0F19;
-      --surface: rgba(255,255,255,0.035);
-      --border: rgba(0,242,254,0.14);
-    }
-    html { scroll-behavior: smooth; }
-    body {
-      background: var(--obs);
-      color: #e2e8f0;
-      font-family: 'Inter', sans-serif;
-      overflow-x: hidden;
-      cursor: none;
-    }
-    @media (pointer: coarse) { body { cursor: auto; } }
+    </script>
 
-    #canvas-bg {
-      position: fixed; inset: 0; z-index: 0;
-      pointer-events: none; display: block;
-    }
-    .content-layer { position: relative; z-index: 1; }
+    <style>
+        body {
+            background-color: #050a14;
+            color: #e2e8f0;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+        }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 3px; }
-    ::-webkit-scrollbar-track { background: var(--obs); }
-    ::-webkit-scrollbar-thumb { background: var(--neural); border-radius: 2px; }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050a14;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f0ff;
+        }
 
-    /* Custom cursor */
-    #cursor-dot {
-      position: fixed; width: 7px; height: 7px;
-      background: var(--cyan); border-radius: 50%;
-      pointer-events: none; z-index: 9999;
-      transform: translate(-50%,-50%);
-      transition: opacity .2s;
-    }
-    #cursor-ring {
-      position: fixed; width: 30px; height: 30px;
-      border: 1px solid rgba(0,242,254,.45);
-      border-radius: 50%; pointer-events: none; z-index: 9998;
-      transform: translate(-50%,-50%);
-      transition: width .2s, height .2s, border-color .2s;
-    }
-    @media (pointer: coarse) { #cursor-dot, #cursor-ring { display: none; } }
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
 
-    /* Progress bar */
-    #progress-bar {
-      position: fixed; top: 0; left: 0; height: 2px; z-index: 1000;
-      background: linear-gradient(90deg, var(--neural), var(--cyan));
-      transition: width .1s linear; width: 0;
-    }
+        .glass-card {
+            background: rgba(10, 18, 36, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 240, 255, 0.12);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-    /* Nav */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px);
-      background: rgba(11,15,25,.72);
-      border-bottom: 1px solid rgba(0,242,254,.07);
-    }
-    .nav-link {
-      position: relative;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .78rem; color: #94a3b8;
-      transition: color .2s; text-decoration: none;
-    }
-    .nav-link::after {
-      content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
-      height: 1px; background: var(--cyan);
-      transform: scaleX(0); transform-origin: left;
-      transition: transform .25s cubic-bezier(.16,1,.3,1);
-    }
-    .nav-link:hover { color: var(--cyan); }
-    .nav-link:hover::after { transform: scaleX(1); }
+        .glass-card:hover {
+            border-color: rgba(0, 240, 255, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px -10px rgba(0, 240, 255, 0.25);
+        }
 
-    /* Glass card */
-    .glass-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border-radius: 12px;
-      transition: transform .3s cubic-bezier(.16,1,.3,1), border-color .3s, box-shadow .3s;
-    }
-    .glass-card:hover {
-      transform: translateY(-4px) scale(1.01);
-      border-color: rgba(0,242,254,.38);
-      box-shadow: 0 0 36px rgba(0,242,254,.07);
-    }
+        .glow-cyan {
+            text-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+        }
 
-    /* Pillar card */
-    .pillar {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(12px);
-      border-radius: 12px;
-      transition: transform .32s cubic-bezier(.16,1,.3,1), border-color .3s, box-shadow .3s;
-    }
-    .pillar:hover { transform: translateY(-7px); }
-    .pillar.p-cyan:hover  { border-color: rgba(0,242,254,.5);   box-shadow: 0 10px 44px rgba(0,242,254,.1); }
-    .pillar.p-blue:hover  { border-color: rgba(79,172,254,.5);  box-shadow: 0 10px 44px rgba(79,172,254,.1); }
-    .pillar.p-green:hover { border-color: rgba(16,185,129,.5);  box-shadow: 0 10px 44px rgba(16,185,129,.1); }
-    .pillar.p-violet:hover{ border-color: rgba(139,92,246,.5);  box-shadow: 0 10px 44px rgba(139,92,246,.1); }
+        .hero-title-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #a5f3fc 40%, #00f0ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-    /* Tag chip */
-    .chip {
-      display: inline-flex; align-items: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .67rem; padding: 3px 9px;
-      border-radius: 4px; border: 1px solid;
-    }
+        .pill-badge {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+        }
 
-    /* Skill bar */
-    .skill-fill {
-      height: 100%; border-radius: 3px;
-      background: linear-gradient(90deg, var(--neural), var(--cyan));
-      width: 0; transition: width 1.3s cubic-bezier(.16,1,.3,1);
-    }
-
-    /* Gradient text */
-    .grad {
-      background: linear-gradient(130deg, #fff 0%, var(--neural) 50%, var(--cyan) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* Section label */
-    .slabel {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .72rem; letter-spacing: .15em;
-      color: var(--cyan); text-transform: uppercase;
-    }
-
-    /* Reveal */
-    .rev {
-      opacity: 0; transform: translateY(26px);
-      transition: opacity .7s ease, transform .7s cubic-bezier(.16,1,.3,1);
-    }
-    .rev.in { opacity: 1; transform: none; }
-    .rev.d1 { transition-delay: .1s; }
-    .rev.d2 { transition-delay: .2s; }
-    .rev.d3 { transition-delay: .3s; }
-    .rev.d4 { transition-delay: .4s; }
-
-    /* Pulse */
-    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.35; } }
-    .pulsed { animation: pulse 2.2s ease-in-out infinite; }
-
-    /* Timeline dot */
-    .tdot {
-      width: 10px; height: 10px; border-radius: 50%;
-      background: var(--cyan); flex-shrink: 0;
-      box-shadow: 0 0 9px rgba(0,242,254,.5);
-      margin-top: 5px;
-    }
-
-    /* Contact link */
-    .clink {
-      display: flex; align-items: center; gap: 12px;
-      padding: 14px 18px; border-radius: 10px;
-      border: 1px solid rgba(0,242,254,.1);
-      background: rgba(255,255,255,.02);
-      transition: all .25s cubic-bezier(.16,1,.3,1);
-      text-decoration: none; color: inherit;
-    }
-    .clink:hover {
-      border-color: rgba(0,242,254,.38);
-      background: rgba(0,242,254,.04);
-      transform: translateX(7px);
-    }
-
-    /* Divider */
-    .divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(0,242,254,.13), transparent);
-      margin: 0 24px;
-    }
-
-    /* Mobile menu */
-    #mob-menu { display: none; }
-    #mob-menu.open { display: flex; }
-
-    /* Scroll mouse SVG animation */
-    @keyframes scrolldown { 0%,100%{opacity:1;cy:9} 50%{opacity:0;cy:18} }
-    #scroll-dot { animation: scrolldown 2s ease-in-out infinite; }
-  </style>
+        .stat-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
 </head>
-<body class="bg-[#0B0F19]">
-  <!-- Three.js background canvas -->
-  <canvas id="canvas-bg"></canvas>
+<body class="relative min-h-screen text-slate-200 selection:bg-cyan-500 selection:text-black">
 
-  <!-- Cursor -->
-  <div id="cursor-dot"></div>
-  <div id="cursor-ring"></div>
+    <canvas id="bg-canvas"></canvas>
 
-  <!-- Progress bar -->
-  <div id="progress-bar"></div>
+    <header class="fixed top-0 left-0 w-full z-50 backdrop-blur-md bg-darkbg/80 border-b border-cyan-900/30">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="#hero" class="font-mono text-lg font-bold tracking-wider text-slate-100 hover:text-cyanaccent transition-colors flex items-center gap-2">
+                <span class="text-cyanaccent">/</span> Kernel_Jayant
+            </a>
+            
+            <nav class="hidden md:flex items-center space-x-8 font-mono text-sm">
+                <a href="#about" class="text-slate-400 hover:text-cyanaccent transition-colors">About</a>
+                <a href="#cp-stats" class="text-slate-400 hover:text-cyanaccent transition-colors">Coding Stats</a>
+                <a href="#expertise" class="text-slate-400 hover:text-cyanaccent transition-colors">Expertise</a>
+                <a href="#milestones" class="text-slate-400 hover:text-cyanaccent transition-colors">Milestones</a>
+                <a href="#projects" class="text-slate-400 hover:text-cyanaccent transition-colors">Projects</a>
+                <a href="#volunteering" class="text-slate-400 hover:text-cyanaccent transition-colors">Experience</a>
+                <a href="#contact" class="px-4 py-1.5 rounded-full border border-cyanaccent/50 text-cyanaccent hover:bg-cyanaccent/10 transition-all shadow-[0_0_10px_rgba(0,240,255,0.2)]">Contact</a>
+            </nav>
 
-  <!-- ══════════════ NAV ══════════════ -->
-  <nav id="nav">
-    <div class="max-w-6xl mx-auto px-6 flex items-center justify-between h-16">
-      <a href="#hero" class="font-mono text-sm no-underline" style="color:var(--cyan)">
-        <span style="color:#475569">~/</span>kernel_jayant
-      </a>
-      <div class="hidden md:flex items-center gap-8">
-        <a href="#about"     class="nav-link">About</a>
-        <a href="#pillars"   class="nav-link">Expertise</a>
-        <a href="#projects"  class="nav-link">Milestones</a>
-        <a href="#education" class="nav-link">Education</a>
-        <a href="#contact"   class="nav-link">Contact</a>
-      </div>
-      <button id="hamburger" class="md:hidden p-2 flex flex-col gap-[5px]">
-        <span class="w-5 h-px bg-slate-400 block"></span>
-        <span class="w-5 h-px bg-slate-400 block"></span>
-        <span class="w-5 h-px bg-slate-400 block"></span>
-      </button>
-    </div>
-    <!-- Mobile menu -->
-    <div id="mob-menu" class="md:hidden flex-col px-6 pb-5 gap-3 border-t border-white/5">
-      <a href="#about"     class="nav-link py-2 block">about</a>
-      <a href="#pillars"   class="nav-link py-2 block">expertise</a>
-      <a href="#projects"  class="nav-link py-2 block">milestones</a>
-      <a href="#education" class="nav-link py-2 block">education</a>
-      <a href="#contact"   class="nav-link py-2 block">contact</a>
-    </div>
-  </nav>
-
-  <div class="content-layer">
-    <!-- ══════════════ HERO ══════════════ -->
-    <section id="hero" class="min-h-[100dvh] flex flex-col items-center justify-center px-6 text-center relative">
-      <div class="max-w-3xl mx-auto">
-        <!-- Badge -->
-        <div class="inline-flex items-center gap-2 mb-7 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm rev">
-          <span class="pulsed w-2 h-2 rounded-full block" style="background:var(--cyan)"></span>
-          <span class="font-mono text-xs text-slate-400">Competitive Programmer</span>
-          <span class="text-slate-600">·</span>
-          <span class="font-mono text-xs" style="color:var(--cyan)">CodeChef, Codeforces &amp; AtCoder</span>
+            <button id="mobile-menu-btn" class="md:hidden text-slate-300 focus:outline-none">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
         </div>
 
-        <!-- Name -->
-        <h1 class="text-5xl sm:text-7xl font-black tracking-tight mb-3 rev d1 grad">
-          Jayant Sharma
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-darkbg/95 border-b border-cyanaccent/20 px-6 py-4 flex flex-col space-y-4 font-mono text-sm">
+            <a href="#about" class="mobile-link text-slate-300 hover:text-cyanaccent">About</a>
+            <a href="#cp-stats" class="mobile-link text-slate-300 hover:text-cyanaccent">Coding Stats</a>
+            <a href="#expertise" class="mobile-link text-slate-300 hover:text-cyanaccent">Expertise</a>
+            <a href="#milestones" class="mobile-link text-slate-300 hover:text-cyanaccent">Milestones</a>
+            <a href="#projects" class="mobile-link text-slate-300 hover:text-cyanaccent">Projects</a>
+            <a href="#volunteering" class="mobile-link text-slate-300 hover:text-cyanaccent">Experience</a>
+            <a href="#contact" class="mobile-link text-cyanaccent font-semibold">Contact Me</a>
+        </div>
+    </header>
+
+    <main id="hero" class="relative z-10 max-w-6xl mx-auto px-4 pt-28 pb-16 flex flex-col items-center justify-center min-h-screen text-center">
+        
+        <!-- Top Pill Badge -->
+        <div class="pill-badge rounded-full px-5 py-2 mb-8 flex items-center space-x-3 text-xs md:text-sm font-mono tracking-wide">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyanaccent animate-pulse shadow-[0_0_8px_#00f0ff]"></span>
+            <span class="text-slate-300">Competitive Programmer</span>
+            <span class="text-slate-500">·</span>
+            <span class="text-cyanaccent font-medium">CodeChef, Codeforces & AtCoder</span>
+        </div>
+
+        <!-- Main Title Header -->
+        <h1 class="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight hero-title-gradient mb-4 drop-shadow-2xl">
+            Jayant Sharma
         </h1>
 
-        <!-- Subtitle -->
-        <p class="font-mono text-base sm:text-lg text-slate-400 mb-1 rev d2">
-          B.Tech CSE · KIET Group of Institutions · 2025–2029
-        </p>
-        <p class="font-mono text-sm mb-10 rev d2" style="color:var(--neural)">
-          Ghaziabad, Uttar Pradesh, India
+        <!-- Subtitle & College Info -->
+        <p class="font-mono text-slate-300 text-sm md:text-base lg:text-lg mb-2 tracking-wide max-w-3xl">
+            B.Tech CSE <span class="text-cyanaccent">·</span> KIET Group of Institutions <span class="text-cyanaccent">·</span> 2025–2029
         </p>
 
-        <!-- Stats -->
-        <div class="flex flex-wrap justify-center gap-6 mb-12 rev d3">
-          <div class="text-center">
-            <div class="text-2xl font-black" style="color:var(--cyan)">C/C++</div>
-            <div class="text-xs text-slate-500 font-mono">Core Logic</div>
-          </div>
-          <div class="w-px h-10 self-center bg-white/10"></div>
-          <div class="text-center">
-            <div class="text-2xl font-black" style="color:#10b981">DSA</div>
-            <div class="text-xs text-slate-500 font-mono">Algorithms</div>
-          </div>
-          <div class="w-px h-10 self-center bg-white/10"></div>
-          <div class="text-center">
-            <div class="text-2xl font-black" style="color:var(--neural)">Cloud</div>
-            <div class="text-xs text-slate-500 font-mono">Architecture</div>
-          </div>
-          <div class="w-px h-10 self-center bg-white/10"></div>
-          <div class="text-center">
-            <div class="text-2xl font-black" style="color:#8b5cf6">AI/ML</div>
-            <div class="text-xs text-slate-500 font-mono">Development</div>
-          </div>
+        <!-- Location Badge with Graph Icon Overlay -->
+        <div class="relative flex items-center justify-center my-3 group">
+            <div class="absolute -z-10 opacity-30 group-hover:opacity-60 transition-opacity">
+                <svg width="220" height="40" viewBox="0 0 220 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 20 L40 10 L80 30 L120 15 L160 25 L200 10" stroke="#00f0ff" stroke-width="1" stroke-dasharray="3 3" />
+                    <circle cx="40" cy="10" r="3" fill="#00f0ff" />
+                    <circle cx="80" cy="30" r="2" fill="#38bdf8" />
+                    <circle cx="120" cy="15" r="3" fill="#a855f7" />
+                    <circle cx="160" cy="25" r="2" fill="#00f0ff" />
+                </svg>
+            </div>
+            <p class="font-mono text-xs md:text-sm text-cyanbright tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-location-dot text-cyanaccent animate-bounce"></i> Ghaziabad, Uttar Pradesh, India
+            </p>
         </div>
 
-        <!-- CTAs -->
-        <div class="flex flex-wrap justify-center gap-4 rev d4">
-          <a href="#projects" class="px-6 py-3 rounded-lg font-mono text-sm font-semibold transition-all hover:scale-105"
-             style="background:linear-gradient(135deg,var(--neural),var(--cyan));color:#0B0F19">
-            View Milestones
-          </a>
-          <a href="#contact" class="px-6 py-3 rounded-lg font-mono text-sm border transition-all hover:scale-105"
-             style="border-color:var(--border);color:var(--cyan);background:rgba(0,242,254,.05)">
-            Get in Touch
-          </a>
-        </div>
-      </div>
+        <!-- Core Skills 4 Column Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 my-10 w-full max-w-4xl">
+            
+            <!-- Column 1: C/C++ -->
+            <div class="glass-card p-5 rounded-2xl flex flex-col items-center justify-center border-t-2 border-t-cyanaccent">
+                <h3 class="text-2xl md:text-3xl font-black text-cyanbright tracking-wider">C/C++</h3>
+                <span class="font-mono text-xs text-slate-400 mt-1">Core Logic</span>
+            </div>
 
-      <!-- Scroll indicator -->
-      <div class="absolute bottom-10 left-1/2 -translate-x-1/2">
-        <svg width="20" height="32" viewBox="0 0 20 32" fill="none">
-          <rect x="1" y="1" width="18" height="30" rx="9" stroke="rgba(0,242,254,.3)" stroke-width="1.5"/>
-          <circle id="scroll-dot" cx="10" cy="9" r="3" fill="rgba(0,242,254,.65)"/>
-        </svg>
-      </div>
+            <!-- Column 2: DSA -->
+            <div class="glass-card p-5 rounded-2xl flex flex-col items-center justify-center border-t-2 border-t-greenaccent">
+                <h3 class="text-2xl md:text-3xl font-black text-greenaccent tracking-wider">DSA</h3>
+                <span class="font-mono text-xs text-slate-400 mt-1">Algorithms</span>
+            </div>
+
+            <!-- Column 3: Cloud -->
+            <div class="glass-card p-5 rounded-2xl flex flex-col items-center justify-center border-t-2 border-t-cyanaccent">
+                <h3 class="text-2xl md:text-3xl font-black text-cyanbright tracking-wider">Cloud</h3>
+                <span class="font-mono text-xs text-slate-400 mt-1">Architecture</span>
+            </div>
+
+            <!-- Column 4: AI/ML -->
+            <div class="glass-card p-5 rounded-2xl flex flex-col items-center justify-center border-t-2 border-t-purpleaccent">
+                <h3 class="text-2xl md:text-3xl font-black text-purpleaccent tracking-wider">AI/ML</h3>
+                <span class="font-mono text-xs text-slate-400 mt-1">Development</span>
+            </div>
+
+        </div>
+
+        <!-- Hero Call To Action Buttons -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-2">
+            <a href="#milestones" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-cyanaccent text-slate-950 font-bold font-mono hover:bg-cyan-300 transition-all duration-300 shadow-[0_0_25px_rgba(0,240,255,0.4)] hover:shadow-[0_0_35px_rgba(0,240,255,0.7)] flex items-center justify-center gap-2">
+                <i class="fa-solid fa-trophy text-sm"></i> View Milestones
+            </a>
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=jayantsharmatech@gmail.com&su=Hello%20Jayant%20Sharma" target="_blank" class="w-full sm:w-auto px-8 py-3.5 rounded-xl border border-cyanaccent/50 bg-cyanaccent/10 text-cyanaccent font-bold font-mono hover:bg-cyanaccent hover:text-slate-950 transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                <i class="fa-solid fa-envelope text-sm"></i> Email Jayant (Gmail)
+            </a>
+        </div>
+    </main>
+
+    <section id="about" class="relative z-10 py-20 px-6 max-w-6xl mx-auto">
+        <div class="flex items-center space-x-4 mb-10">
+            <div class="h-0.5 w-12 bg-cyanaccent"></div>
+            <h2 class="text-2xl md:text-3xl font-bold font-mono text-slate-100">01. // About Me</h2>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="md:col-span-2 glass-card p-8 rounded-2xl space-y-4 text-slate-300 leading-relaxed">
+                <p>
+                    Hello! I'm <strong class="text-cyanaccent">Jayant Sharma</strong> (<code class="text-cyanbright font-mono">@Kernel_Jayant</code>), a Computer Science Engineering student at <strong class="text-slate-100">KIET Group of Institutions (2025–2029)</strong>.
+                </p>
+                <p>
+                    I specialize in high-performance algorithmic problem solving, serverless cloud architecture, and AI-driven full-stack engineering. With over <span class="text-cyanbright font-semibold">302+ questions solved</span> and <span class="text-cyanbright font-semibold">42 competitive programming contests</span> under my belt across CodeChef, Codeforces, and AtCoder, I bring speed, efficiency, and architectural clarity to every project I build.
+                </p>
+                <p>
+                    Recently, I secured <span class="text-cyanaccent font-semibold">2nd Place at the Iron Labs Hackathon</span> with <em>PitchRoute</em> and built national-scale systems including the <em>Legal Metrology Compliance Platform</em> and <em>EcoBuild</em> (hyperlocal C&D waste marketplace). I hold the <span class="text-purpleaccent font-semibold">AWS Certified AI Practitioner</span> certification.
+                </p>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl flex flex-col justify-between space-y-6">
+                <div>
+                    <h3 class="font-mono text-cyanaccent font-semibold mb-4 text-sm tracking-wider">QUICK PROFILE</h3>
+                    <ul class="space-y-3 font-mono text-xs text-slate-300">
+                        <li class="flex justify-between border-b border-slate-800 pb-2">
+                            <span class="text-slate-500">Handle:</span> @Kernel_Jayant
+                        </li>
+                        <li class="flex justify-between border-b border-slate-800 pb-2">
+                            <span class="text-slate-500">Institution:</span> KIET Group
+                        </li>
+                        <li class="flex justify-between border-b border-slate-800 pb-2">
+                            <span class="text-slate-500">Active Days:</span> 148 Days
+                        </li>
+                        <li class="flex justify-between border-b border-slate-800 pb-2">
+                            <span class="text-slate-500">AWS Cert ID:</span> 159cb624...
+                        </li>
+                        <li class="flex justify-between">
+                            <span class="text-slate-500">Location:</span> Ghaziabad, UP, India
+                        </li>
+                    </ul>
+                </div>
+                <a href="https://github.com/jayantsharmatech" target="_blank" class="w-full py-2.5 rounded-lg border border-cyanaccent/30 text-cyanbright hover:bg-cyanaccent/10 font-mono text-xs text-center transition-all flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-github text-sm"></i> GitHub: jayantsharmatech
+                </a>
+            </div>
+        </div>
     </section>
 
-    <div class="divider"></div>
-
-    <!-- ══════════════ ABOUT / SKILLS ══════════════ -->
-    <section id="about" class="py-24 px-6">
-      <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-14 items-start">
-        <!-- Bio -->
-        <div>
-          <p class="slabel mb-4 rev">About</p>
-          <h2 class="text-3xl sm:text-4xl font-bold mb-6 leading-tight rev d1">
-            Building at the intersection of<br/>
-            <span style="color:var(--cyan)">algorithms &amp; intelligence.</span>
-          </h2>
-          <div class="space-y-4 text-slate-400 leading-relaxed text-sm rev d2">
-            <p>
-              First-year B.Tech CSE student at KIET Group of Institutions, Ghaziabad — focused on
-              Data Structures, Algorithmic Logic, and Artificial Intelligence. I am an active
-              competitive programmer with over 270 questions solved and 24 global contests attended, 
-              emphasizing complexity analysis and memory management using advanced C++ and C.
-            </p>
-            <p>
-              Beyond the terminal, I am expanding my development skills in Machine Learning environments
-              and modern cloud architecture. When I'm taking a break from problem-solving and coding,
-              you can usually find me at the table tennis court.
-            </p>
-          </div>
-          <!-- Org badges -->
-          <div class="mt-8 flex flex-wrap gap-3 rev d3">
-            <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.05)">DevUp Club · KIET</span>
-            <span class="chip" style="border-color:rgba(79,172,254,.22);color:var(--neural);background:rgba(79,172,254,.05)">NSS KIET</span>
-          </div>
+    <section id="cp-stats" class="relative z-10 py-20 px-6 max-w-6xl mx-auto">
+        <div class="flex items-center space-x-4 mb-10">
+            <div class="h-0.5 w-12 bg-cyanaccent"></div>
+            <h2 class="text-2xl md:text-3xl font-bold font-mono text-slate-100">02. // Competitive Programming Statistics</h2>
         </div>
 
-        <!-- Skill bars -->
-        <div>
-          <p class="slabel mb-6 rev">Technical Skills</p>
-          <div id="skill-section" class="space-y-4 rev d1">
-            <div>
-              <div class="flex justify-between mb-1">
-                <span class="font-mono text-sm text-slate-300">C++ (Core Logic)</span>
-                <span class="font-mono text-sm" style="color:var(--cyan)">95%</span>
-              </div>
-              <div class="h-1.5 rounded-full bg-white/5">
-                <div class="skill-fill" data-w="95%"></div>
-              </div>
+        <!-- Stats Overview Cards Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="glass-card p-6 rounded-2xl text-center border-t-2 border-t-cyanaccent">
+                <span class="font-mono text-xs text-slate-400 uppercase tracking-wider block mb-1">Questions Solved</span>
+                <span class="text-4xl md:text-5xl font-black text-cyanbright">302</span>
             </div>
-            <div>
-              <div class="flex justify-between mb-1">
-                <span class="font-mono text-sm text-slate-300">Data Structures &amp; Algorithms</span>
-                <span class="font-mono text-sm" style="color:var(--cyan)">90%</span>
-              </div>
-              <div class="h-1.5 rounded-full bg-white/5">
-                <div class="skill-fill" data-w="90%"></div>
-              </div>
+
+            <div class="glass-card p-6 rounded-2xl text-center border-t-2 border-t-greenaccent">
+                <span class="font-mono text-xs text-slate-400 uppercase tracking-wider block mb-1">Active Days</span>
+                <span class="text-4xl md:text-5xl font-black text-greenaccent">148</span>
             </div>
-            <div>
-              <div class="flex justify-between mb-1">
-                <span class="font-mono text-sm text-slate-300">C</span>
-                <span class="font-mono text-sm" style="color:var(--cyan)">85%</span>
-              </div>
-              <div class="h-1.5 rounded-full bg-white/5">
-                <div class="skill-fill" data-w="85%"></div>
-              </div>
+
+            <div class="glass-card p-6 rounded-2xl text-center border-t-2 border-t-purpleaccent">
+                <span class="font-mono text-xs text-slate-400 uppercase tracking-wider block mb-1">Contests Attended</span>
+                <span class="text-4xl md:text-5xl font-black text-purpleaccent">42</span>
             </div>
-            <div>
-              <div class="flex justify-between mb-1">
-                <span class="font-mono text-sm text-slate-300">Artificial Intelligence &amp; ML</span>
-                <span class="font-mono text-sm" style="color:#10b981">80%</span>
-              </div>
-              <div class="h-1.5 rounded-full bg-white/5">
-                <div class="skill-fill" data-w="80%" style="background:linear-gradient(90deg,#059669,#10b981)"></div>
-              </div>
+
+            <div class="glass-card p-6 rounded-2xl text-center border-t-2 border-t-orangeaccent">
+                <span class="font-mono text-xs text-slate-400 uppercase tracking-wider block mb-1">Max Streak</span>
+                <span class="text-4xl md:text-5xl font-black text-orangeaccent">36<span class="text-lg">days</span></span>
             </div>
-            <div>
-              <div class="flex justify-between mb-1">
-                <span class="font-mono text-sm text-slate-300">Cloud Architecture</span>
-                <span class="font-mono text-sm" style="color:#10b981">75%</span>
-              </div>
-              <div class="h-1.5 rounded-full bg-white/5">
-                <div class="skill-fill" data-w="75%" style="background:linear-gradient(90deg,#059669,#10b981)"></div>
-              </div>
-            </div>
-            <div>
-              <div class="flex justify-between mb-1">
-                <span class="font-mono text-sm text-slate-300">Git / GitHub</span>
-                <span class="font-mono text-sm" style="color:#8b5cf6">85%</span>
-              </div>
-              <div class="h-1.5 rounded-full bg-white/5">
-                <div class="skill-fill" data-w="85%" style="background:linear-gradient(90deg,#6d28d9,#8b5cf6)"></div>
-              </div>
-            </div>
-            <div>
-              <div class="flex justify-between mb-1">
-                <span class="font-mono text-sm text-slate-300">Competitive Programming</span>
-                <span class="font-mono text-sm" style="color:#8b5cf6">88%</span>
-              </div>
-              <div class="h-1.5 rounded-full bg-white/5">
-                <div class="skill-fill" data-w="88%" style="background:linear-gradient(90deg,#6d28d9,#8b5cf6)"></div>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
+
+        <!-- Platform Ratings Breakdown -->
+        <div class="glass-card p-6 md:p-8 rounded-2xl space-y-6">
+            <h3 class="font-mono font-bold text-slate-200 border-b border-slate-800 pb-3 flex items-center justify-between text-lg">
+                <span>Contest Ratings & Platform Handles</span>
+                <i class="fa-solid fa-chart-line text-cyanaccent"></i>
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-mono text-sm">
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2">
+                    <div>
+                        <div class="font-bold text-slate-100">CodeChef DSA</div>
+                        <span class="text-xs text-slate-500">1570 Peak Rating</span>
+                    </div>
+                    <span class="px-3 py-1 rounded bg-amber-950/80 text-amber-400 border border-amber-700/50 font-bold text-center">1570</span>
+                </div>
+
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2">
+                    <div>
+                        <div class="font-bold text-slate-100">CodeChef</div>
+                        <span class="text-xs text-slate-500">Starters 258</span>
+                    </div>
+                    <span class="px-3 py-1 rounded bg-slate-800 text-cyanbright font-bold text-center">1337</span>
+                </div>
+
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2">
+                    <div>
+                        <div class="font-bold text-slate-100">Codeforces</div>
+                        <span class="text-xs text-slate-500">Newbie (Max 882)</span>
+                    </div>
+                    <span class="px-3 py-1 rounded bg-slate-800 text-cyanbright font-bold text-center">845</span>
+                </div>
+
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2">
+                    <div>
+                        <div class="font-bold text-slate-100">AtCoder</div>
+                        <span class="text-xs text-slate-500">9 Contests</span>
+                    </div>
+                    <span class="px-3 py-1 rounded bg-slate-800 text-purpleaccent font-bold text-center">153</span>
+                </div>
+            </div>
+        </div>
     </section>
 
-    <div class="divider"></div>
-
-    <!-- ══════════════ FOUR PILLARS ══════════════ -->
-    <section id="pillars" class="py-24 px-6">
-      <div class="max-w-6xl mx-auto">
-        <div class="text-center mb-14">
-          <p class="slabel mb-3 rev">Core Expertise</p>
-          <h2 class="text-3xl sm:text-4xl font-bold rev d1">Four Pillars</h2>
+    <section id="expertise" class="relative z-10 py-20 px-6 max-w-6xl mx-auto">
+        <div class="flex items-center space-x-4 mb-10">
+            <div class="h-0.5 w-12 bg-cyanaccent"></div>
+            <h2 class="text-2xl md:text-3xl font-bold font-mono text-slate-100">03. // Tech Stack & Domain Expertise</h2>
         </div>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
-          <!-- 1. Competitive Programming -->
-          <div class="pillar p-cyan p-6 rev">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(0,242,254,.1)">
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-                <rect x="3" y="3" width="18" height="18" rx="3" stroke="#00F2FE" stroke-width="1.5"/>
-                <path d="M8 9l3 3-3 3M13 15h3" stroke="#00F2FE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+        <div class="grid md:grid-cols-3 gap-6">
+            <!-- Languages -->
+            <div class="glass-card p-6 rounded-2xl space-y-4">
+                <div class="w-12 h-12 rounded-xl bg-cyan-950/80 border border-cyanaccent/40 flex items-center justify-center text-cyanaccent text-xl">
+                    <i class="fa-solid fa-code"></i>
+                </div>
+                <h3 class="font-mono font-bold text-lg text-slate-100">Languages</h3>
+                <div class="flex flex-wrap gap-2 pt-2">
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-cyanbright font-mono text-xs border border-slate-700">C / C++</span>
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-cyanbright font-mono text-xs border border-slate-700">Python</span>
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-cyanbright font-mono text-xs border border-slate-700">Java</span>
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-cyanbright font-mono text-xs border border-slate-700">JavaScript</span>
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-cyanbright font-mono text-xs border border-slate-700">SQL</span>
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-cyanbright font-mono text-xs border border-slate-700">HTML5 / CSS3</span>
+                </div>
             </div>
-            <h3 class="font-bold text-lg mb-2" style="color:var(--cyan)">Competitive Programming</h3>
-            <p class="text-sm text-slate-400 leading-relaxed mb-4">
-              Active competitor with 270+ algorithmic problems solved and 24 contests attended.
-              Proven performance across CodeChef, Codeforces, and AtCoder with a strong emphasis on writing optimized C/C++ logic.
-            </p>
-            <div class="flex flex-wrap gap-1.5">
-              <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.05)">C++</span>
-              <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.05)">CodeChef</span>
-              <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.05)">AtCoder</span>
-            </div>
-          </div>
 
-          <!-- 2. Data Structures & Algorithms -->
-          <div class="pillar p-green p-6 rev d1">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(16,185,129,.1)">
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-                <rect x="4" y="8" width="16" height="9" rx="2" stroke="#10b981" stroke-width="1.5"/>
-                <path d="M8 8V6a2 2 0 014 0v2M14 8V6a2 2 0 014 0" stroke="#10b981" stroke-width="1.5" stroke-linecap="round"/>
-                <circle cx="12" cy="12.5" r="1.8" stroke="#10b981" stroke-width="1.5"/>
-              </svg>
+            <!-- Concepts & Domains -->
+            <div class="glass-card p-6 rounded-2xl space-y-4">
+                <div class="w-12 h-12 rounded-xl bg-purple-950/80 border border-purpleaccent/40 flex items-center justify-center text-purpleaccent text-xl">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <h3 class="font-mono font-bold text-lg text-slate-100">Domains</h3>
+                <div class="flex flex-wrap gap-2 pt-2">
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-purple-300 font-mono text-xs border border-slate-700">Data Structures & Algo</span>
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-purple-300 font-mono text-xs border border-slate-700">Artificial Intelligence</span>
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-purple-300 font-mono text-xs border border-slate-700">Serverless Architecture</span>
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-purple-300 font-mono text-xs border border-slate-700">OCR & Computer Vision</span>
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-purple-300 font-mono text-xs border border-slate-700">Cloud Computing</span>
+                </div>
             </div>
-            <h3 class="font-bold text-lg mb-2" style="color:#10b981">Data Structures</h3>
-            <p class="text-sm text-slate-400 leading-relaxed mb-4">
-              Building a strong foundation in core computer science concepts. Focusing on efficient 
-              data manipulation to solve complex, scale-level computational problems.
-            </p>
-            <div class="flex flex-wrap gap-1.5">
-              <span class="chip" style="border-color:rgba(16,185,129,.22);color:#10b981;background:rgba(16,185,129,.05)">DSA</span>
-              <span class="chip" style="border-color:rgba(16,185,129,.22);color:#10b981;background:rgba(16,185,129,.05)">Trees &amp; Graphs</span>
-              <span class="chip" style="border-color:rgba(16,185,129,.22);color:#10b981;background:rgba(16,185,129,.05)">Optimization</span>
-            </div>
-          </div>
 
-          <!-- 3. AI / ML -->
-          <div class="pillar p-blue p-6 rev d2">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(79,172,254,.1)">
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-                <circle cx="12" cy="5" r="2" stroke="#4FACFE" stroke-width="1.5"/>
-                <circle cx="5" cy="19" r="2" stroke="#4FACFE" stroke-width="1.5"/>
-                <circle cx="19" cy="19" r="2" stroke="#4FACFE" stroke-width="1.5"/>
-                <path d="M12 7L5 17M12 7l7 10M6.5 19h11" stroke="#4FACFE" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
+            <!-- Frameworks & Tools -->
+            <div class="glass-card p-6 rounded-2xl space-y-4">
+                <div class="w-12 h-12 rounded-xl bg-emerald-950/80 border border-greenaccent/40 flex items-center justify-center text-greenaccent text-xl">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <h3 class="font-mono font-bold text-lg text-slate-100">Frameworks & Tools</h3>
+                <div class="flex flex-wrap gap-2 pt-2">
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-emerald-300 font-mono text-xs border border-slate-700">React.js & Vite</span>
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-emerald-300 font-mono text-xs border border-slate-700">FastAPI & Uvicorn</span>
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-emerald-300 font-mono text-xs border border-slate-700">AWS EC2, Bedrock, Lambda</span>
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-emerald-300 font-mono text-xs border border-slate-700">Tailwind CSS</span>
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-emerald-300 font-mono text-xs border border-slate-700">SQLite & Supabase</span>
+                    <span class="px-3 py-1 rounded-md bg-slate-800/80 text-emerald-300 font-mono text-xs border border-slate-700">Git & Vercel</span>
+                </div>
             </div>
-            <h3 class="font-bold text-lg mb-2" style="color:var(--neural)">AI / ML Development</h3>
-            <p class="text-sm text-slate-400 leading-relaxed mb-4">
-              Exploring intelligent workflows and applying machine learning fundamentals to understand 
-              predictive models, data science, and automated decision systems.
-            </p>
-            <div class="flex flex-wrap gap-1.5">
-              <span class="chip" style="border-color:rgba(79,172,254,.22);color:var(--neural);background:rgba(79,172,254,.05)">Machine Learning</span>
-              <span class="chip" style="border-color:rgba(79,172,254,.22);color:var(--neural);background:rgba(79,172,254,.05)">Data Science</span>
-            </div>
-          </div>
-
-          <!-- 4. Cloud Architecture -->
-          <div class="pillar p-violet p-6 rev d3">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(139,92,246,.1)">
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <polyline points="16 7 22 7 22 13" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <h3 class="font-bold text-lg mb-2" style="color:#8b5cf6">Cloud &amp; Web Services</h3>
-            <p class="text-sm text-slate-400 leading-relaxed mb-4">
-              Expanding technical breadth through hands-on application of cloud architecture 
-              principles and modern web services designed for scale and efficiency.
-            </p>
-            <div class="flex flex-wrap gap-1.5">
-              <span class="chip" style="border-color:rgba(139,92,246,.22);color:#8b5cf6;background:rgba(139,92,246,.05)">Cloud Infrastructure</span>
-              <span class="chip" style="border-color:rgba(139,92,246,.22);color:#8b5cf6;background:rgba(139,92,246,.05)">Web Services</span>
-            </div>
-          </div>
-
         </div>
-      </div>
     </section>
 
-    <div class="divider"></div>
-
-    <!-- ══════════════ PROJECTS & MILESTONES ══════════════ -->
-    <section id="projects" class="py-24 px-6">
-      <div class="max-w-6xl mx-auto">
-        <div class="mb-14">
-          <p class="slabel mb-3 rev">Milestones &amp; Applied Learning</p>
-          <h2 class="text-3xl sm:text-4xl font-bold rev d1">Technical Achievements.</h2>
+    <section id="milestones" class="relative z-10 py-20 px-6 max-w-6xl mx-auto">
+        <div class="flex items-center space-x-4 mb-10">
+            <div class="h-0.5 w-12 bg-cyanaccent"></div>
+            <h2 class="text-2xl md:text-3xl font-bold font-mono text-slate-100">04. // Key Milestones & Achievements</h2>
         </div>
+
         <div class="grid md:grid-cols-2 gap-6">
+            <!-- Iron Labs Hackathon 2nd Place -->
+            <div class="glass-card p-6 rounded-2xl border-l-4 border-l-cyanaccent flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-2.5 py-1 rounded bg-cyan-950 text-cyanaccent font-mono text-xs border border-cyan-800 font-bold">2nd Place Runner-Up</span>
+                        <span class="text-xs font-mono text-slate-400">Team PitchRoute</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-100 mb-2">Iron Labs Hackathon 2026</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                        Led team PitchRoute to secure 2nd Place at the Iron Labs Hackathon by architecting an AI-driven sales execution and live dynamic pitch optimization platform.
+                    </p>
+                </div>
+                <div class="font-mono text-xs text-slate-400 border-t border-slate-800/80 pt-3 flex items-center gap-2">
+                    <i class="fa-solid fa-award text-cyanaccent"></i> Team Leadership & Full-Stack AI Integration
+                </div>
+            </div>
 
-          <!-- Milestone 1: Competitive Programming Stats -->
-          <div class="glass-card p-8 rev">
-            <div class="flex items-start justify-between mb-5">
-              <div class="w-12 h-12 rounded-xl flex items-center justify-center"
-                   style="background:rgba(0,242,254,.1);border:1px solid rgba(0,242,254,.2)">
-                <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-                  <path d="M4 6h16M4 10h16M4 14h10M4 18h7" stroke="#00F2FE" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-              </div>
-              <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.06)">CP · @Kernel_Jayant</span>
+            <!-- AWS Certified AI Practitioner -->
+            <div class="glass-card p-6 rounded-2xl border-l-4 border-l-purpleaccent flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-2.5 py-1 rounded bg-purple-950 text-purpleaccent font-mono text-xs border border-purple-800 font-bold">Certified May 2026</span>
+                        <span class="text-xs font-mono text-slate-400">Amazon Web Services</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-100 mb-2">AWS Certified AI Practitioner</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                        Validated expertise in cloud AI/ML workloads, foundational generative models, prompt engineering strategies, and ethical AI deployment.
+                    </p>
+                </div>
+                <div class="font-mono text-xs text-slate-400 border-t border-slate-800/80 pt-3 flex items-center justify-between">
+                    <span><i class="fa-solid fa-shield-halved text-purpleaccent"></i> Credential ID: 159cb62445724b54beeb8bfa42dada79</span>
+                </div>
             </div>
-            <h3 class="font-bold text-xl mb-3 text-white">Competitive Programming Record</h3>
-            <p class="text-slate-400 text-sm leading-relaxed mb-6">
-              Maintained a rigorous algorithmic streak with <strong>271 questions solved</strong> across 111 active days. Competed in <strong>24 global contests</strong>, specializing heavily in Arrays, Math, and Bit Manipulation topics.
-            </p>
-            <div class="grid grid-cols-2 gap-y-4 gap-x-2 mb-6">
-              <div>
-                <span class="block text-slate-500 font-mono text-[0.65rem] uppercase tracking-wider mb-1">CodeChef</span>
-                <span class="text-white text-sm font-semibold">Max Rating: 1212</span>
-              </div>
-              <div>
-                <span class="block text-slate-500 font-mono text-[0.65rem] uppercase tracking-wider mb-1">Codeforces</span>
-                <span class="text-white text-sm font-semibold">Newbie (Max: 882)</span>
-              </div>
-              <div>
-                <span class="block text-slate-500 font-mono text-[0.65rem] uppercase tracking-wider mb-1">AtCoder</span>
-                <span class="text-white text-sm font-semibold">Max Rating: 101</span>
-              </div>
-              <div>
-                <span class="block text-slate-500 font-mono text-[0.65rem] uppercase tracking-wider mb-1"></span>
-                <span class="text-white text-sm font-semibold"></span>
-              </div>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.05)">271 Solved</span>
-              <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.05)">24 Contests</span>
-              <span class="chip" style="border-color:rgba(0,242,254,.22);color:var(--cyan);background:rgba(0,242,254,.05)">111 Active Days</span>
-            </div>
-          </div>
 
-          <!-- Milestone 2: Cloud Workshop -->
-          <div class="glass-card p-8 rev d1">
-            <div class="flex items-start justify-between mb-5">
-              <div class="w-12 h-12 rounded-xl flex items-center justify-center"
-                   style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2)">
-                <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-                  <path d="M2 12h2l3-7 4 14 3-10 2 3h6" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <span class="chip" style="border-color:rgba(16,185,129,.22);color:#10b981;background:rgba(16,185,129,.06)">Cloud · Web Services</span>
+            <!-- SIH Shortlisted -->
+            <div class="glass-card p-6 rounded-2xl border-l-4 border-l-greenaccent flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-2.5 py-1 rounded bg-emerald-950 text-greenaccent font-mono text-xs border border-emerald-800 font-bold">Shortlisted</span>
+                        <span class="text-xs font-mono text-slate-400">Team KERNEL_DEVS</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-100 mb-2">Smart India Hackathon (SIH)</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                        Selected for national-level innovation challenges solving critical real-world public sector engineering and regulatory compliance bottlenecks.
+                    </p>
+                </div>
+                <div class="font-mono text-xs text-slate-400 border-t border-slate-800/80 pt-3 flex items-center gap-2">
+                    <i class="fa-solid fa-bolt text-greenaccent"></i> National Innovation Track
+                </div>
             </div>
-            <h3 class="font-bold text-xl mb-3 text-white">Cloud Architecture Immersion</h3>
-            <p class="text-slate-400 text-sm leading-relaxed mb-5">
-              Participated in a comprehensive 3-day campus technology workshop (March 23-25, 2026). 
-              Gained hands-on experience in modern cloud infrastructure, web service deployment, 
-              and understanding scalable architecture frameworks for future application development.
-            </p>
-            <div class="flex flex-wrap gap-2">
-              <span class="chip" style="border-color:rgba(16,185,129,.22);color:#10b981;background:rgba(16,185,129,.05)">Cloud Computing</span>
-              <span class="chip" style="border-color:rgba(16,185,129,.22);color:#10b981;background:rgba(16,185,129,.05)">Workshops</span>
-              <span class="chip" style="border-color:rgba(16,185,129,.22);color:#10b981;background:rgba(16,185,129,.05)">Scalability</span>
-            </div>
-          </div>
 
+            <!-- Competitive Programming Milestone -->
+            <div class="glass-card p-6 rounded-2xl border-l-4 border-l-cyanbright flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-2.5 py-1 rounded bg-slate-800 text-cyanbright font-mono text-xs border border-slate-700 font-bold">302+ Problems Solved</span>
+                        <span class="text-xs font-mono text-slate-400">CodeChef & Codeforces</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-100 mb-2">CP Peak Rating 1570</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                        Maintained an active 36-day streak and 148 active days, achieving 1570 in CodeChef DSA and participating in AWS Builder Group events.
+                    </p>
+                </div>
+                <div class="font-mono text-xs text-slate-400 border-t border-slate-800/80 pt-3 flex items-center gap-2">
+                    <i class="fa-solid fa-code-branch text-cyanbright"></i> Algorithmic Mastery
+                </div>
+            </div>
         </div>
-      </div>
     </section>
 
-    <div class="divider"></div>
+    <section id="projects" class="relative z-10 py-20 px-6 max-w-6xl mx-auto">
+        <div class="flex items-center space-x-4 mb-10">
+            <div class="h-0.5 w-12 bg-cyanaccent"></div>
+            <h2 class="text-2xl md:text-3xl font-bold font-mono text-slate-100">05. // Featured Projects</h2>
+        </div>
 
-    <!-- ══════════════ EDUCATION & EXPERIENCE ══════════════ -->
-    <section id="education" class="py-24 px-6">
-      <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-14">
+        <div class="space-y-10">
+            
+            <!-- Project 1: Legal Metrology Compliance Platform -->
+            <div class="glass-card p-8 rounded-3xl relative overflow-hidden border-t-2 border-t-cyanaccent group">
+                <div class="flex flex-col lg:flex-row justify-between gap-6">
+                    <div class="space-y-4 lg:w-2/3">
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 rounded-full bg-cyan-950 text-cyanaccent border border-cyan-800 font-mono text-xs font-bold">REGULATORY AI PLATFORM</span>
+                            <span class="font-mono text-xs text-slate-400">Section 36(1) Penalty Engine</span>
+                        </div>
+                        
+                        <h3 class="text-3xl font-extrabold text-slate-100 group-hover:text-cyanbright transition-colors">
+                            Legal Metrology Compliance Platform
+                        </h3>
+                        
+                        <p class="text-slate-300 text-sm leading-relaxed">
+                            An AI-driven compliance verification and enforcement system for evaluating pre-packaged commodities against the Legal Metrology (Packaged Commodities) Rules, 2011 and computing penalties under Section 36(1) of the Legal Metrology Act, 2009.
+                        </p>
 
-        <!-- Education -->
-        <div>
-          <p class="slabel mb-8 rev">Education</p>
-          <div class="glass-card p-6 rev d1">
-            <div class="flex items-start gap-4">
-              <div class="tdot"></div>
-              <div class="flex-1">
-                <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
-                  <h3 class="font-bold text-white">KIET Group of Institutions</h3>
-                  <span class="font-mono text-xs text-slate-500">2025 – 2029</span>
+                        <!-- Key Features Checklist -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 font-mono text-xs text-slate-300">
+                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-cyanaccent"></i> Multi-angle product label OCR extraction</div>
+                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-cyanaccent"></i> Mandatory declaration detection</div>
+                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-cyanaccent"></i> Deterministic legal rule engine</div>
+                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-cyanaccent"></i> Barcode / GS1 prefix cross-checking</div>
+                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-cyanaccent"></i> Font height & readability analysis</div>
+                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-cyanaccent"></i> Bounding-box visual evidence generator</div>
+                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-cyanaccent"></i> Downloadable PDF inspection challan</div>
+                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-cyanaccent"></i> Offline-first provisional scan & GPS support</div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 pt-4">
+                            <span class="px-3 py-1 rounded bg-slate-900 text-cyanbright font-mono text-xs border border-slate-800">React SPA</span>
+                            <span class="px-3 py-1 rounded bg-slate-900 text-cyanbright font-mono text-xs border border-slate-800">Vite</span>
+                            <span class="px-3 py-1 rounded bg-slate-900 text-cyanbright font-mono text-xs border border-slate-800">Python FastAPI</span>
+                            <span class="px-3 py-1 rounded bg-slate-900 text-cyanbright font-mono text-xs border border-slate-800">AWS EC2</span>
+                            <span class="px-3 py-1 rounded bg-slate-900 text-cyanbright font-mono text-xs border border-slate-800">OCR / Vision Model</span>
+                            <span class="px-3 py-1 rounded bg-slate-900 text-cyanbright font-mono text-xs border border-slate-800">SQLite / Supabase</span>
+                        </div>
+                    </div>
+
+                    <div class="lg:w-1/3 flex flex-col justify-between bg-slate-900/60 p-6 rounded-2xl border border-slate-800 font-mono text-xs space-y-4">
+                        <div class="space-y-2">
+                            <h4 class="text-cyanaccent font-bold uppercase tracking-wider text-[11px]">System Architecture</h4>
+                            <p class="text-slate-400">Frontend hosted on Vercel; high-concurrency FastAPI microservice on AWS EC2 with HTTPS security endpoints.</p>
+                        </div>
+                        <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
+                            <span class="text-slate-500">Audit Trail:</span>
+                            <span class="text-greenaccent font-semibold">Enabled</span>
+                        </div>
+                        <a href="https://github.com/jayantsharmatech/product_compliance" target="_blank" class="w-full py-2.5 rounded-xl bg-cyanaccent/10 border border-cyanaccent/40 text-cyanaccent hover:bg-cyanaccent hover:text-slate-950 font-bold text-center transition-all flex items-center justify-center gap-2">
+                            <i class="fa-brands fa-github text-sm"></i> View Source Code
+                        </a>
+                    </div>
                 </div>
-                <p class="text-sm font-semibold mb-1" style="color:var(--neural)">
-                  B.Tech in Computer Science and Engineering
+            </div>
+
+            <!-- Project 2: EcoBuild (C&D Waste Marketplace) -->
+            <div class="glass-card p-8 rounded-3xl relative overflow-hidden border-t-2 border-t-greenaccent group">
+                <div class="flex flex-col lg:flex-row justify-between gap-6">
+                    <div class="space-y-4 lg:w-2/3">
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 rounded-full bg-emerald-950 text-greenaccent border border-emerald-800 font-mono text-xs font-bold">AWS HACKATHON PROJECT</span>
+                            <span class="font-mono text-xs text-slate-400">Serverless C&D Marketplace</span>
+                        </div>
+                        
+                        <h3 class="text-3xl font-extrabold text-slate-100 group-hover:text-greenaccent transition-colors">
+                            EcoBuild
+                        </h3>
+                        
+                        <p class="text-slate-300 text-sm leading-relaxed">
+                            A serverless, real-time, hyperlocal marketplace that connects construction sites, contractors, general public, and recycling material buyers while dispatching transport (dumper trucks) to move waste materials efficiently.
+                        </p>
+
+                        <!-- Challenge vs Response Highlights -->
+                        <div class="space-y-2 pt-2 font-mono text-xs">
+                            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                                <span class="text-slate-400">AI Classification & Voice-to-Text:</span>
+                                <span class="text-greenaccent font-semibold">Instant Material Listing</span>
+                            </div>
+                            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                                <span class="text-slate-400">Transport Logistics:</span>
+                                <span class="text-greenaccent font-semibold">Integrated Dumper Truck Booking</span>
+                            </div>
+                            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                                <span class="text-slate-400">Infrastructure Cost:</span>
+                                <span class="text-greenaccent font-semibold">Zero Idle Server Cost (Serverless)</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 pt-4">
+                            <span class="px-3 py-1 rounded bg-slate-900 text-emerald-300 font-mono text-xs border border-slate-800">AWS Lambda</span>
+                            <span class="px-3 py-1 rounded bg-slate-900 text-emerald-300 font-mono text-xs border border-slate-800">Serverless Architecture</span>
+                            <span class="px-3 py-1 rounded bg-slate-900 text-emerald-300 font-mono text-xs border border-slate-800">React</span>
+                            <span class="px-3 py-1 rounded bg-slate-900 text-emerald-300 font-mono text-xs border border-slate-800">Vercel Deployment</span>
+                            <span class="px-3 py-1 rounded bg-slate-900 text-emerald-300 font-mono text-xs border border-slate-800">Voice-to-Text AI</span>
+                        </div>
+                    </div>
+
+                    <div class="lg:w-1/3 flex flex-col justify-between bg-slate-900/60 p-6 rounded-2xl border border-slate-800 font-mono text-xs space-y-4">
+                        <div class="space-y-2">
+                            <h4 class="text-greenaccent font-bold uppercase tracking-wider text-[11px]">Live Access</h4>
+                            <p class="text-slate-400">Deployed live web application for real-time hyperlocal waste dispatch.</p>
+                        </div>
+                        <a href="https://aws-hackathon-dtu-eight.vercel.app" target="_blank" class="w-full py-3 rounded-xl bg-greenaccent text-slate-950 font-bold text-center hover:bg-emerald-400 transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live App
+                        </a>
+                        <a href="https://github.com/jayantsharmatech/AWS-hackathon-DTU" target="_blank" class="w-full py-2.5 rounded-xl bg-slate-800 text-slate-200 hover:text-greenaccent text-center transition-all flex items-center justify-center gap-2">
+                            <i class="fa-brands fa-github text-sm"></i> GitHub Repository
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project 3: PitchRoute -->
+            <div class="glass-card p-8 rounded-3xl relative overflow-hidden border-t-2 border-t-purpleaccent group">
+                <div class="flex flex-col lg:flex-row justify-between gap-6">
+                    <div class="space-y-4 lg:w-2/3">
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 rounded-full bg-purple-950 text-purpleaccent border border-purple-800 font-mono text-xs font-bold">2ND PLACE IRON LABS HACKATHON</span>
+                        </div>
+                        
+                        <h3 class="text-3xl font-extrabold text-slate-100 group-hover:text-purpleaccent transition-colors">
+                            PitchRoute
+                        </h3>
+                        
+                        <p class="text-slate-300 text-sm leading-relaxed">
+                            An end-to-end AI-powered sales execution and intelligence assistant. Features dynamic pitch optimization, contextual prompt generation, and real-time client sentiment analysis built and demonstrated under team leadership.
+                        </p>
+
+                        <div class="flex flex-wrap gap-2 pt-4">
+                            <span class="px-3 py-1 rounded bg-slate-900 text-purple-300 font-mono text-xs border border-slate-800">React</span>
+                            <span class="px-3 py-1 rounded bg-slate-900 text-purple-300 font-mono text-xs border border-slate-800">FastAPI</span>
+                            <span class="px-3 py-1 rounded bg-slate-900 text-purple-300 font-mono text-xs border border-slate-800">MongoDB</span>
+                            <span class="px-3 py-1 rounded bg-slate-900 text-purple-300 font-mono text-xs border border-slate-800">OpenAI API</span>
+                            <span class="px-3 py-1 rounded bg-slate-900 text-purple-300 font-mono text-xs border border-slate-800">Tailwind CSS</span>
+                        </div>
+                    </div>
+
+                    <div class="lg:w-1/3 flex flex-col justify-between bg-slate-900/60 p-6 rounded-2xl border border-slate-800 font-mono text-xs space-y-4">
+                        <div class="space-y-2">
+                            <h4 class="text-purpleaccent font-bold uppercase tracking-wider text-[11px]">Role & Leadership</h4>
+                            <p class="text-slate-400">Team Lead for PitchRoute — directed AI integration and real-time inference latency optimization.</p>
+                        </div>
+                        <a href="https://github.com/jayantsharmatech" target="_blank" class="w-full py-2.5 rounded-xl bg-purple-950 border border-purple-700/60 text-purple-200 hover:bg-purple-900 font-bold text-center transition-all flex items-center justify-center gap-2">
+                            <i class="fa-brands fa-github text-sm"></i> GitHub Project
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="volunteering" class="relative z-10 py-20 px-6 max-w-6xl mx-auto">
+        <div class="flex items-center space-x-4 mb-10">
+            <div class="h-0.5 w-12 bg-cyanaccent"></div>
+            <h2 class="text-2xl md:text-3xl font-bold font-mono text-slate-100">06. // Campus Leadership & Volunteering</h2>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="glass-card p-6 rounded-2xl space-y-3">
+                <i class="fa-solid fa-code-commit text-2xl text-cyanaccent"></i>
+                <h3 class="text-lg font-bold text-slate-100">DevUp Technical Club</h3>
+                <p class="text-xs font-mono text-slate-400">Active Technical Member · KIET</p>
+                <p class="text-sm text-slate-300">
+                    Organized technical bootcamps, peer coding competitions, and guided junior students in C++ and Data Structures.
                 </p>
-                <p class="text-xs text-slate-500 mb-3">Ghaziabad, Uttar Pradesh</p>
-                <p class="text-sm text-slate-400 leading-relaxed">
-                  Focusing on Data Structures, Algorithmic Logic, and Artificial Intelligence concepts. 
-                  Active in competitive programming, tech club initiatives, and preparing to expand my capabilities 
-                  in machine learning environments.
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl space-y-3">
+                <i class="fa-solid fa-hand-holding-heart text-2xl text-purpleaccent"></i>
+                <h3 class="text-lg font-bold text-slate-100">NSS KIET Student Volunteer</h3>
+                <p class="text-xs font-mono text-slate-400">National Service Scheme</p>
+                <p class="text-sm text-slate-300">
+                    Participated actively in community outreach, digital literacy drives, and regional social initiatives.
                 </p>
-                <div class="flex flex-wrap gap-1.5 mt-4">
-                  <span class="chip" style="border-color:rgba(0,242,254,.18);color:var(--cyan);background:rgba(0,242,254,.04)">Data Structures</span>
-                  <span class="chip" style="border-color:rgba(0,242,254,.18);color:var(--cyan);background:rgba(0,242,254,.04)">Algorithms</span>
-                  <span class="chip" style="border-color:rgba(0,242,254,.18);color:var(--cyan);background:rgba(0,242,254,.04)">AI/ML</span>
-                </div>
-              </div>
             </div>
-          </div>
+
+            <div class="glass-card p-6 rounded-2xl space-y-3">
+                <i class="fa-solid fa-droplet text-2xl text-greenaccent"></i>
+                <h3 class="text-lg font-bold text-slate-100">Stem Cell Donor Drive</h3>
+                <p class="text-xs font-mono text-slate-400">Community Health Organizer</p>
+                <p class="text-sm text-slate-300">
+                    Volunteered in awareness campaigns registering potential stem cell donors for critical medical treatments.
+                </p>
+            </div>
         </div>
-
-        <!-- Experience & Leadership -->
-        <div>
-          <p class="slabel mb-8 rev">Experience &amp; Leadership</p>
-          <div class="space-y-4">
-
-            <div class="glass-card p-6 rev d1">
-              <div class="flex items-start gap-4">
-                <div class="tdot" style="background:var(--neural);box-shadow:0 0 9px rgba(79,172,254,.5)"></div>
-                <div class="flex-1">
-                  <div class="flex flex-wrap items-start justify-between gap-2 mb-1">
-                    <h3 class="font-semibold text-white text-sm">DevUp Club · KIET</h3>
-                    <span class="font-mono text-xs text-slate-500">Nov 2025 – Present</span>
-                  </div>
-                  <p class="text-xs font-semibold mb-2" style="color:var(--neural)">Technical Club Member</p>
-                  <p class="text-sm text-slate-400 leading-relaxed">
-                    Collaborating with peers on technical initiatives, participating in skill-building workshops, 
-                    and actively expanding development skills in emerging tech ecosystems.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div class="glass-card p-6 rev d2">
-              <div class="flex items-start gap-4">
-                <div class="tdot" style="background:#10b981;box-shadow:0 0 9px rgba(16,185,129,.5)"></div>
-                <div class="flex-1">
-                  <div class="flex flex-wrap items-start justify-between gap-2 mb-1">
-                    <h3 class="font-semibold text-white text-sm">NSS KIET</h3>
-                    <span class="font-mono text-xs text-slate-500">Nov 2025 – Present</span>
-                  </div>
-                  <p class="text-xs font-semibold mb-2" style="color:#10b981">Student Volunteer</p>
-                  <p class="text-sm text-slate-400 leading-relaxed">
-                    Actively participating in social service initiatives and driving team-based community 
-                    development programs across the campus.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-      </div>
     </section>
 
-    <div class="divider"></div>
+    <section id="contact" class="relative z-10 py-20 px-6 max-w-4xl mx-auto text-center">
+        <div class="glass-card p-8 md:p-12 rounded-3xl space-y-8 relative overflow-hidden">
+            <div class="space-y-3">
+                <h2 class="text-3xl md:text-5xl font-black hero-title-gradient">Let's Connect & Build</h2>
+                <p class="font-mono text-slate-400 text-sm max-w-xl mx-auto">
+                    Have an interesting AI/ML collaboration, hackathon proposal, or software engineering challenge? Feel free to reach out.
+                </p>
+            </div>
 
-    <!-- ══════════════ CONTACT ══════════════ -->
-    <section id="contact" class="py-24 px-6">
-      <div class="max-w-xl mx-auto text-center">
-        <p class="slabel mb-4 rev">Contact & Profiles</p>
-        <h2 class="text-3xl sm:text-4xl font-bold mb-4 rev d1">Let's connect.</h2>
-        <p class="text-slate-400 text-sm mb-12 rev d2">
-          Reach out to me for discussions on algorithms, machine learning development, or check out my competitive programming profiles below.
-        </p>
-        
-        <!-- Socials & CP Links Container -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left rev d3">
+            <!-- Contact Form -->
+            <form id="contact-form" class="space-y-4 max-w-xl mx-auto text-left">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" required placeholder="Your Name" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-3 text-slate-200 font-mono text-sm focus:outline-none focus:border-cyanaccent">
+                    <input type="email" required placeholder="Your Email" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-3 text-slate-200 font-mono text-sm focus:outline-none focus:border-cyanaccent">
+                </div>
+                <textarea rows="4" required placeholder="Your Message..." class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-3 text-slate-200 font-mono text-sm focus:outline-none focus:border-cyanaccent"></textarea>
+                
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-cyanaccent text-slate-950 font-mono font-bold hover:bg-cyan-300 transition-all shadow-[0_0_20px_rgba(0,240,255,0.3)]">
+                    Send Message <i class="fa-solid fa-paper-plane ml-1"></i>
+                </button>
+            </form>
 
-          <a href="mailto:jayantsharma.tech@gmail.com" class="clink">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
-              <rect x="2" y="4" width="20" height="16" rx="3" stroke="var(--cyan)" stroke-width="1.5"/>
-              <path d="M2 8l10 7 10-7" stroke="var(--cyan)" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <span class="font-mono text-xs text-slate-300">jayantsharma.tech@gmail.com</span>
-            <span class="ml-auto text-slate-600 text-xs">↗</span>
-          </a>
+            <div id="toast-msg" class="hidden font-mono text-xs text-greenaccent bg-emerald-950/80 p-3 rounded-lg border border-emerald-700">
+                Message sent successfully! I will respond promptly.
+            </div>
 
-          <a href="https://linkedin.com/in/jayant-sharma-6a9684381" target="_blank" rel="noopener" class="clink">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
-              <rect x="2" y="2" width="20" height="20" rx="4" stroke="var(--neural)" stroke-width="1.5"/>
-              <path d="M7 10v7M7 7.5V7" stroke="var(--neural)" stroke-width="1.5" stroke-linecap="round"/>
-              <path d="M11 17v-4c0-1.1.9-2 2-2s2 .9 2 2v4M11 10v7" stroke="var(--neural)" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <span class="font-mono text-xs text-slate-300">LinkedIn Profile</span>
-            <span class="ml-auto text-slate-600 text-xs">↗</span>
-          </a>
-
-          <!-- CodeChef -->
-          <a href="https://www.codechef.com/users/Kernel_Jayant" target="_blank" rel="noopener" class="clink">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
-              <path d="M6 8L12 2L18 8M6 16L12 22L18 16" stroke="var(--cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="font-mono text-xs text-slate-300">CodeChef: @Kernel_Jayant</span>
-            <span class="ml-auto text-slate-600 text-xs">↗</span>
-          </a>
-
-          <!-- Codeforces -->
-          <a href="https://codeforces.com/profile/Kernel_Jayant" target="_blank" rel="noopener" class="clink">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
-              <rect x="4" y="14" width="4" height="6" fill="var(--cyan)"/>
-              <rect x="10" y="10" width="4" height="10" fill="var(--cyan)"/>
-              <rect x="16" y="4" width="4" height="16" fill="var(--cyan)"/>
-            </svg>
-            <span class="font-mono text-xs text-slate-300">CF: @Kernel_Jayant</span>
-            <span class="ml-auto text-slate-600 text-xs">↗</span>
-          </a>
-
-          <!-- AtCoder -->
-          <a href="https://atcoder.jp/users/Kernel_Jayant" target="_blank" rel="noopener" class="clink">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="9" stroke="var(--cyan)" stroke-width="1.5"/>
-              <path d="M12 6v12M8 10l8 4" stroke="var(--cyan)" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <span class="font-mono text-xs text-slate-300">AtCoder: @Kernel_Jayant</span>
-            <span class="ml-auto text-slate-600 text-xs">↗</span>
-          </a>
-          
-          <a href="https://github.com/jayantsharmatech" target="_blank" rel="noopener" class="clink">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="#8b5cf6">
-              <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.929.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-            </svg>
-            <span class="font-mono text-xs text-slate-300">GitHub Profile</span>
-            <span class="ml-auto text-slate-600 text-xs">↗</span>
-          </a>
-
+            <!-- Social Links Grid -->
+            <div class="pt-6 border-t border-slate-800 flex flex-wrap justify-center items-center gap-6 font-mono text-sm">
+                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=jayantsharmatech@gmail.com&su=Hello%20Jayant%20Sharma" target="_blank" class="text-cyanaccent hover:text-cyanbright flex items-center gap-2 transition-colors font-semibold">
+                    <i class="fa-solid fa-envelope text-lg"></i> Send Email (Gmail)
+                </a>
+                <a href="https://github.com/jayantsharmatech" target="_blank" class="text-slate-400 hover:text-cyanaccent flex items-center gap-2 transition-colors">
+                    <i class="fa-brands fa-github text-lg"></i> GitHub
+                </a>
+                <a href="https://codeforces.com" target="_blank" class="text-slate-400 hover:text-cyanbright flex items-center gap-2 transition-colors">
+                    <i class="fa-solid fa-code text-lg"></i> Codeforces (@Kernel_Jayant)
+                </a>
+                <a href="https://www.codechef.com" target="_blank" class="text-slate-400 hover:text-purpleaccent flex items-center gap-2 transition-colors">
+                    <i class="fa-solid fa-utensils text-lg"></i> CodeChef
+                </a>
+                <a href="https://linkedin.com" target="_blank" class="text-slate-400 hover:text-cyanaccent flex items-center gap-2 transition-colors">
+                    <i class="fa-brands fa-linkedin text-lg"></i> LinkedIn
+                </a>
+            </div>
         </div>
-      </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="py-8 px-6 text-center border-t border-white/5">
-      <p class="font-mono text-xs text-slate-600">
-             © 2026 Jayant Sharma · KIET Group of Institutions 
-      </p>
+    <footer class="relative z-10 py-8 border-t border-slate-900 text-center font-mono text-xs text-slate-500">
+        <p>© 2026 Jayant Sharma (/ Kernel_Jayant). All Rights Reserved.</p>
     </footer>
-  </div><!-- /content-layer -->
 
-  <!-- ══════════════ SCRIPTS ══════════════ -->
-  <script>
-  (function() {
-    // ── Progress bar ──────────────────────────────────────────────
-    var pb = document.getElementById('progress-bar');
-    window.addEventListener('scroll', function() {
-      var max = document.documentElement.scrollHeight - window.innerHeight;
-      pb.style.width = (max > 0 ? (window.scrollY / max * 100) : 0) + '%';
-    });
+    <script>
+        let scene, camera, renderer, particleSystem, lineMesh;
+        const particleCount = 130;
+        const particlesData = [];
+        let mouseX = 0, mouseY = 0;
 
-    // ── Custom cursor ─────────────────────────────────────────────
-    var dot  = document.getElementById('cursor-dot');
-    var ring = document.getElementById('cursor-ring');
-    var cx = 0, cy = 0, rx = 0, ry = 0;
+        function initThreeJS() {
+            const canvas = document.getElementById('bg-canvas');
+            scene = new THREE.Scene();
 
-    document.addEventListener('mousemove', function(e) {
-      cx = e.clientX; cy = e.clientY;
-      dot.style.left = cx + 'px';
-      dot.style.top  = cy + 'px';
-    });
-    (function animRing() {
-      rx += (cx - rx) * 0.12;
-      ry += (cy - ry) * 0.12;
-      ring.style.left = rx + 'px';
-      ring.style.top  = ry + 'px';
-      requestAnimationFrame(animRing);
-    })();
-    document.querySelectorAll('a, button').forEach(function(el) {
-      el.addEventListener('mouseenter', function() {
-        ring.style.width  = '48px';
-        ring.style.height = '48px';
-        ring.style.borderColor = 'rgba(0,242,254,.85)';
-      });
-      el.addEventListener('mouseleave', function() {
-        ring.style.width  = '30px';
-        ring.style.height = '30px';
-        ring.style.borderColor = 'rgba(0,242,254,.45)';
-      });
-    });
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.position.z = 400;
 
-    // ── Mobile menu ───────────────────────────────────────────────
-    var ham  = document.getElementById('hamburger');
-    var mob  = document.getElementById('mob-menu');
-    ham.addEventListener('click', function() { mob.classList.toggle('open'); });
-    mob.querySelectorAll('a').forEach(function(a) {
-      a.addEventListener('click', function() { mob.classList.remove('open'); });
-    });
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // ── Reveal on scroll ──────────────────────────────────────────
-    var revObs = new IntersectionObserver(function(entries) {
-      entries.forEach(function(e) {
-        if (e.isIntersecting) {
-          e.target.classList.add('in');
-          revObs.unobserve(e.target);
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+
+            const colorCyan = new THREE.Color('#00f0ff');
+            const colorPurple = new THREE.Color('#a855f7');
+            const colorBlue = new THREE.Color('#38bdf8');
+
+            for (let i = 0; i < particleCount; i++) {
+                const x = (Math.random() - 0.5) * 800;
+                const y = (Math.random() - 0.5) * 800;
+                const z = (Math.random() - 0.5) * 800;
+
+                positions[i * 3] = x;
+                positions[i * 3 + 1] = y;
+                positions[i * 3 + 2] = z;
+
+                const randColor = i % 3 === 0 ? colorCyan : (i % 3 === 1 ? colorPurple : colorBlue);
+                colors[i * 3] = randColor.r;
+                colors[i * 3 + 1] = randColor.g;
+                colors[i * 3 + 2] = randColor.b;
+
+                particlesData.push({
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.8,
+                        (Math.random() - 0.5) * 0.8,
+                        (Math.random() - 0.5) * 0.8
+                    ),
+                    numConnections: 0
+                });
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const pMaterial = new THREE.PointsMaterial({
+                size: 4,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.85,
+                blending: THREE.AdditiveBlending
+            });
+
+            particleSystem = new THREE.Points(geometry, pMaterial);
+            scene.add(particleSystem);
+
+            const lineGeometry = new THREE.BufferGeometry();
+            const maxLines = particleCount * particleCount;
+            const linePositions = new Float32Array(maxLines * 6);
+            const lineColors = new Float32Array(maxLines * 6);
+
+            lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+            lineGeometry.setAttribute('color', new THREE.BufferAttribute(lineColors, 3));
+
+            const lineMaterial = new THREE.LineBasicMaterial({
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.35,
+                blending: THREE.AdditiveBlending
+            });
+
+            lineMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
+            scene.add(lineMesh);
+
+            window.addEventListener('resize', onWindowResize);
+            document.addEventListener('mousemove', onDocumentMouseMove);
         }
-      });
-    }, { threshold: 0.10 });
-    document.querySelectorAll('.rev').forEach(function(el) { revObs.observe(el); });
 
-    // Trigger hero elements immediately (already in viewport)
-    document.querySelectorAll('#hero .rev').forEach(function(el) {
-      el.classList.add('in');
-    });
-
-    // ── Skill bars ────────────────────────────────────────────────
-    var skillObs = new IntersectionObserver(function(entries) {
-      entries.forEach(function(e) {
-        if (e.isIntersecting) {
-          e.target.querySelectorAll('.skill-fill').forEach(function(bar) {
-            bar.style.width = bar.dataset.w;
-          });
-          skillObs.unobserve(e.target);
+        function onDocumentMouseMove(event) {
+            mouseX = (event.clientX - window.innerWidth / 2) * 0.05;
+            mouseY = (event.clientY - window.innerHeight / 2) * 0.05;
         }
-      });
-    }, { threshold: 0.25 });
-    var ss = document.getElementById('skill-section');
-    if (ss) skillObs.observe(ss);
 
-    // ── THREE.JS PARTICLE CONSTELLATION ──────────────────────────
-    if (!window.THREE) { console.warn('Three.js not loaded'); return; }
-
-    var canvas = document.getElementById('canvas-bg');
-    var W = window.innerWidth, H = window.innerHeight;
-    var mobile = W < 768;
-
-    var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(W, H);
-    renderer.setClearColor(0x000000, 0);
-
-    var scene  = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 1000);
-    camera.position.set(0, 0, 80);
-
-    window.addEventListener('resize', function() {
-      W = window.innerWidth; H = window.innerHeight;
-      mobile = W < 768;
-      renderer.setSize(W, H);
-      camera.aspect = W / H;
-      camera.updateProjectionMatrix();
-    });
-
-    // Particles
-    var N = mobile ? 140 : 280;
-    var MAX_DIST = mobile ? 24 : 21;
-    var MAX_LINES = 500;
-
-    var pos = new Float32Array(N * 3);
-    var vel = new Float32Array(N * 3);
-
-    for (var i = 0; i < N; i++) {
-      var i3 = i * 3;
-      pos[i3]     = (Math.random() - 0.5) * 130;
-      pos[i3 + 1] = (Math.random() - 0.5) * 130;
-      pos[i3 + 2] = (Math.random() - 0.5) * 60;
-      vel[i3]     = (Math.random() - 0.5) * 0.035;
-      vel[i3 + 1] = (Math.random() - 0.5) * 0.035;
-      vel[i3 + 2] = (Math.random() - 0.5) * 0.018;
-    }
-
-    var ptGeo = new THREE.BufferGeometry();
-    var posAttr = new THREE.BufferAttribute(pos, 3);
-    ptGeo.setAttribute('position', posAttr);
-
-    var ptMat = new THREE.PointsMaterial({
-      color: 0x4FACFE, size: mobile ? 0.5 : 0.72,
-      transparent: true, opacity: 0.85, sizeAttenuation: true
-    });
-    scene.add(new THREE.Points(ptGeo, ptMat));
-
-    // Lines
-    var linePos = new Float32Array(MAX_LINES * 6);
-    var lineCol = new Float32Array(MAX_LINES * 6);
-    var lGeo = new THREE.BufferGeometry();
-    lGeo.setAttribute('position', new THREE.BufferAttribute(linePos, 3));
-    lGeo.setAttribute('color',    new THREE.BufferAttribute(lineCol, 3));
-    var lMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.38 });
-    var lSegs = new THREE.LineSegments(lGeo, lMat);
-    scene.add(lSegs);
-
-    // Mouse / scroll state
-    var mTX = 0, mTY = 0, mX = 0, mY = 0;
-    var scrollPct = 0;
-
-    document.addEventListener('mousemove', function(e) {
-      mTX = (e.clientX / window.innerWidth  - 0.5) * 2;
-      mTY = (e.clientY / window.innerHeight - 0.5) * 2;
-    });
-    window.addEventListener('scroll', function() {
-      var max = document.documentElement.scrollHeight - window.innerHeight;
-      scrollPct = max > 0 ? window.scrollY / max : 0;
-    });
-
-    // Animate
-    function animate() {
-      requestAnimationFrame(animate);
-
-      // Lerp mouse
-      mX += (mTX - mX) * 0.045;
-      mY += (mTY - mY) * 0.045;
-
-      // Camera: scroll-driven dolly + mouse tilt
-      camera.position.z  = 80 - scrollPct * 28;
-      camera.position.y  = -scrollPct * 18;
-      camera.rotation.x  =  mY * 0.05;
-      camera.rotation.y  =  mX * 0.05;
-
-      // Update particles
-      var wMX = mX * 38, wMY = -mY * 38;
-      for (var i = 0; i < N; i++) {
-        var i3 = i * 3;
-        var dx = wMX - pos[i3], dy = wMY - pos[i3+1];
-        var d2 = dx*dx + dy*dy;
-        if (d2 < 1600) { // within 40 units
-          vel[i3]     += dx * 0.00012;
-          vel[i3 + 1] += dy * 0.00012;
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         }
-        vel[i3]     *= 0.991;
-        vel[i3 + 1] *= 0.991;
-        vel[i3 + 2] *= 0.991;
-        pos[i3]     += vel[i3];
-        pos[i3 + 1] += vel[i3 + 1];
-        pos[i3 + 2] += vel[i3 + 2];
-        // Boundary wrap
-        if (pos[i3]     >  65) pos[i3]     = -65;
-        if (pos[i3]     < -65) pos[i3]     =  65;
-        if (pos[i3 + 1] >  65) pos[i3 + 1] = -65;
-        if (pos[i3 + 1] < -65) pos[i3 + 1] =  65;
-        if (pos[i3 + 2] >  32) pos[i3 + 2] = -32;
-        if (pos[i3 + 2] < -32) pos[i3 + 2] =  32;
-      }
-      posAttr.needsUpdate = true;
 
-      // Build line segments
-      var li = 0;
-      for (var a = 0; a < N && li < MAX_LINES; a++) {
-        var a3 = a * 3;
-        for (var b = a + 1; b < N && li < MAX_LINES; b++) {
-          var b3 = b * 3;
-          var ex = pos[a3]-pos[b3], ey = pos[a3+1]-pos[b3+1], ez = pos[a3+2]-pos[b3+2];
-          var dist = Math.sqrt(ex*ex + ey*ey + ez*ez);
-          if (dist < MAX_DIST) {
-            var alpha = 1 - dist / MAX_DIST;
-            var l6 = li * 6;
-            linePos[l6]=pos[a3]; linePos[l6+1]=pos[a3+1]; linePos[l6+2]=pos[a3+2];
-            linePos[l6+3]=pos[b3]; linePos[l6+4]=pos[b3+1]; linePos[l6+5]=pos[b3+2];
-            // Cyan to neural-blue gradient
-            lineCol[l6]   = alpha * 0.31; lineCol[l6+1] = alpha * 0.95; lineCol[l6+2] = alpha;
-            lineCol[l6+3] = alpha * 0.31; lineCol[l6+4] = alpha * 0.95; lineCol[l6+5] = alpha;
-            li++;
-          }
+        function animate() {
+            requestAnimationFrame(animate);
+
+            camera.position.x += (mouseX - camera.position.x) * 0.03;
+            camera.position.y += (-mouseY - camera.position.y) * 0.03;
+            camera.lookAt(scene.position);
+
+            const positions = particleSystem.geometry.attributes.position.array;
+            let vertexIdx = 0;
+            let colorIdx = 0;
+
+            const linePositions = lineMesh.geometry.attributes.position.array;
+            const lineColors = lineMesh.geometry.attributes.color.array;
+            let numConnected = 0;
+
+            for (let i = 0; i < particleCount; i++) {
+                positions[i * 3] += particlesData[i].velocity.x;
+                positions[i * 3 + 1] += particlesData[i].velocity.y;
+                positions[i * 3 + 2] += particlesData[i].velocity.z;
+
+                if (Math.abs(positions[i * 3]) > 400) particlesData[i].velocity.x *= -1;
+                if (Math.abs(positions[i * 3 + 1]) > 400) particlesData[i].velocity.y *= -1;
+                if (Math.abs(positions[i * 3 + 2]) > 400) particlesData[i].velocity.z *= -1;
+
+                for (let j = i + 1; j < particleCount; j++) {
+                    const dx = positions[i * 3] - positions[j * 3];
+                    const dy = positions[i * 3 + 1] - positions[j * 3 + 1];
+                    const dz = positions[i * 3 + 2] - positions[j * 3 + 2];
+                    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                    if (dist < 110) {
+                        const alpha = 1.0 - (dist / 110);
+
+                        linePositions[vertexIdx++] = positions[i * 3];
+                        linePositions[vertexIdx++] = positions[i * 3 + 1];
+                        linePositions[vertexIdx++] = positions[i * 3 + 2];
+
+                        linePositions[vertexIdx++] = positions[j * 3];
+                        linePositions[vertexIdx++] = positions[j * 3 + 1];
+                        linePositions[vertexIdx++] = positions[j * 3 + 2];
+
+                        lineColors[colorIdx++] = 0.0;
+                        lineColors[colorIdx++] = 0.9 * alpha;
+                        lineColors[colorIdx++] = 1.0 * alpha;
+
+                        lineColors[colorIdx++] = 0.0;
+                        lineColors[colorIdx++] = 0.9 * alpha;
+                        lineColors[colorIdx++] = 1.0 * alpha;
+
+                        numConnected++;
+                    }
+                }
+            }
+
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+            lineMesh.geometry.setDrawRange(0, numConnected * 2);
+            lineMesh.geometry.attributes.position.needsUpdate = true;
+            lineMesh.geometry.attributes.color.needsUpdate = true;
+
+            particleSystem.rotation.y += 0.001;
+
+            renderer.render(scene, camera);
         }
-      }
-      lGeo.setDrawRange(0, li * 2);
-      lGeo.attributes.position.needsUpdate = true;
-      lGeo.attributes.color.needsUpdate = true;
 
-      renderer.render(scene, camera);
-    }
+        window.onload = function() {
+            initThreeJS();
+            animate();
 
-    animate();
-  })();
-  </script>
+            const menuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            document.querySelectorAll('.mobile-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            const form = document.getElementById('contact-form');
+            const toast = document.getElementById('toast-msg');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                toast.classList.remove('hidden');
+                form.reset();
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 4000);
+            });
+        };
+    </script>
 </body>
 </html>
