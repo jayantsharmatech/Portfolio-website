@@ -7,6 +7,8 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -70,7 +72,7 @@
             pointer-events: none;
         }
 
-        .glass-card {
+        .glass-card, .glass-panel {
             background: rgba(10, 18, 36, 0.75);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(0, 240, 255, 0.12);
@@ -221,7 +223,7 @@
     <section id="about" class="relative z-10 py-20 px-6 max-w-6xl mx-auto">
         <div class="flex items-center space-x-4 mb-10">
             <div class="h-0.5 w-12 bg-cyanaccent"></div>
-            <h2 class="text-2xl md:text-3xl font-bold font-mono text-slate-100">01.  About Me</h2>
+            <h2 class="text-2xl md:text-3xl font-bold font-mono text-slate-100">01. About Me</h2>
         </div>
 
         <div class="grid md:grid-cols-3 gap-8">
@@ -666,49 +668,62 @@
     </section>
 
     <section id="contact" class="relative z-10 py-20 px-6 max-w-4xl mx-auto text-center">
-        <div class="glass-card p-8 md:p-12 rounded-3xl space-y-8 relative overflow-hidden">
-            <div class="space-y-3">
-                <h2 class="text-3xl md:text-5xl font-black hero-title-gradient">Let's Connect & Build</h2>
-                <p class="font-mono text-slate-400 text-sm max-w-xl mx-auto">
-                    Have an interesting AI/ML collaboration, hackathon proposal, or software engineering challenge? Feel free to reach out.
-                </p>
-            </div>
+        <h2 class="text-3xl md:text-5xl font-black hero-title-gradient mb-3">Let's Connect & Build</h2>
+        <p class="font-mono text-slate-400 text-sm max-w-lg mx-auto mb-10">
+            Have an interesting AI/ML collaboration, hackathon proposal, or software engineering challenge? Feel free to reach out.
+        </p>
 
-            <!-- Contact Form -->
-            <form id="contact-form" class="space-y-4 max-w-xl mx-auto text-left">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" required placeholder="Your Name" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-3 text-slate-200 font-mono text-sm focus:outline-none focus:border-cyanaccent">
-                    <input type="email" required placeholder="Your Email" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-3 text-slate-200 font-mono text-sm focus:outline-none focus:border-cyanaccent">
+        <!-- Clean Direct Profile Links Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+            <!-- Email / Gmail -->
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=jayantsharmatech@gmail.com&su=Hello%20Jayant" target="_blank"
+               class="glass-panel p-5 rounded-xl border border-cyan-500/20 hover:border-cyan-400 bg-slate-900/60 hover:bg-slate-800/80 transition-all flex flex-col items-center justify-center gap-2 group hover:-translate-y-1 shadow-lg hover:shadow-cyan-500/10">
+                <div class="p-3 rounded-full bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-400 group-hover:text-black transition-colors">
+                    <i data-lucide="mail" class="w-6 h-6"></i>
                 </div>
-                <textarea rows="4" required placeholder="Your Message..." class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-3 text-slate-200 font-mono text-sm focus:outline-none focus:border-cyanaccent"></textarea>
-                
-                <button type="submit" class="w-full py-3.5 rounded-xl bg-cyanaccent text-slate-950 font-mono font-bold hover:bg-cyan-300 transition-all shadow-[0_0_20px_rgba(0,240,255,0.3)]">
-                    Send Message <i class="fa-solid fa-paper-plane ml-1"></i>
-                </button>
-            </form>
+                <span class="text-white font-semibold text-sm">Send Email (Gmail)</span>
+                <span class="text-xs text-slate-400 font-mono">jayantsharmatech@gmail.com</span>
+            </a>
 
-            <div id="toast-msg" class="hidden font-mono text-xs text-greenaccent bg-emerald-950/80 p-3 rounded-lg border border-emerald-700">
-                Message sent successfully! I will respond promptly.
-            </div>
+            <!-- LinkedIn -->
+            <a href="https://www.linkedin.com/in/jayant-sharma-6a9684381/" target="_blank"
+               class="glass-panel p-5 rounded-xl border border-blue-500/20 hover:border-blue-400 bg-slate-900/60 hover:bg-slate-800/80 transition-all flex flex-col items-center justify-center gap-2 group hover:-translate-y-1 shadow-lg hover:shadow-blue-500/10">
+                <div class="p-3 rounded-full bg-blue-500/10 text-blue-400 group-hover:bg-blue-400 group-hover:text-black transition-colors">
+                    <i data-lucide="linkedin" class="w-6 h-6"></i>
+                </div>
+                <span class="text-white font-semibold text-sm">LinkedIn</span>
+                <span class="text-xs text-slate-400 font-mono">jayant-sharma-6a9684381</span>
+            </a>
 
-            <!-- Social Links Grid -->
-            <div class="pt-6 border-t border-slate-800 flex flex-wrap justify-center items-center gap-6 font-mono text-sm">
-                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=jayantsharmatech@gmail.com&su=Hello%20Jayant%20Sharma" target="_blank" class="text-cyanaccent hover:text-cyanbright flex items-center gap-2 transition-colors font-semibold">
-                    <i class="fa-solid fa-envelope text-lg"></i> Send Email (Gmail)
-                </a>
-                <a href="https://github.com/jayantsharmatech" target="_blank" class="text-slate-400 hover:text-cyanaccent flex items-center gap-2 transition-colors">
-                    <i class="fa-brands fa-github text-lg"></i> GitHub
-                </a>
-                <a href="https://codeforces.com/profile/Kernel_Jayant" target="_blank" class="text-slate-400 hover:text-cyanbright flex items-center gap-2 transition-colors">
-                    <i class="fa-solid fa-code text-lg"></i> Codeforces (@Kernel_Jayant)
-                </a>
-                <a href="https://www.codechef.com/users/kernel_jayant" target="_blank" class="text-slate-400 hover:text-purpleaccent flex items-center gap-2 transition-colors">
-                    <i class="fa-solid fa-utensils text-lg"></i> CodeChef (@kernel_jayant)
-                </a>
-                <a href="https://www.linkedin.com/in/jayant-sharma-6a9684381/" target="_blank" class="text-slate-400 hover:text-cyanaccent flex items-center gap-2 transition-colors">
-                    <i class="fa-brands fa-linkedin text-lg"></i> LinkedIn
-                </a>
-            </div>
+            <!-- GitHub -->
+            <a href="https://github.com/jayantsharmatech" target="_blank"
+               class="glass-panel p-5 rounded-xl border border-slate-500/20 hover:border-slate-300 bg-slate-900/60 hover:bg-slate-800/80 transition-all flex flex-col items-center justify-center gap-2 group hover:-translate-y-1 shadow-lg">
+                <div class="p-3 rounded-full bg-slate-500/10 text-slate-300 group-hover:bg-slate-200 group-hover:text-black transition-colors">
+                    <i data-lucide="github" class="w-6 h-6"></i>
+                </div>
+                <span class="text-white font-semibold text-sm">GitHub</span>
+                <span class="text-xs text-slate-400 font-mono">@jayantsharmatech</span>
+            </a>
+
+            <!-- CodeChef -->
+            <a href="https://www.codechef.com/users/kernel_jayant" target="_blank"
+               class="glass-panel p-5 rounded-xl border border-amber-500/20 hover:border-amber-400 bg-slate-900/60 hover:bg-slate-800/80 transition-all flex flex-col items-center justify-center gap-2 group hover:-translate-y-1 shadow-lg hover:shadow-amber-500/10">
+                <div class="p-3 rounded-full bg-amber-500/10 text-amber-400 group-hover:bg-amber-400 group-hover:text-black transition-colors">
+                    <i data-lucide="utensils" class="w-6 h-6"></i>
+                </div>
+                <span class="text-white font-semibold text-sm">CodeChef</span>
+                <span class="text-xs text-slate-400 font-mono">@kernel_jayant</span>
+            </a>
+
+            <!-- Codeforces -->
+            <a href="https://codeforces.com/profile/Kernel_Jayant" target="_blank"
+               class="glass-panel p-5 rounded-xl border border-red-500/20 hover:border-red-400 bg-slate-900/60 hover:bg-slate-800/80 transition-all flex flex-col items-center justify-center gap-2 group hover:-translate-y-1 shadow-lg hover:shadow-red-500/10 md:col-span-2">
+                <div class="p-3 rounded-full bg-red-500/10 text-red-400 group-hover:bg-red-400 group-hover:text-black transition-colors">
+                    <i data-lucide="code-2" class="w-6 h-6"></i>
+                </div>
+                <span class="text-white font-semibold text-sm">Codeforces</span>
+                <span class="text-xs text-slate-400 font-mono">@Kernel_Jayant</span>
+            </a>
         </div>
     </section>
 
@@ -879,6 +894,7 @@
         window.onload = function() {
             initThreeJS();
             animate();
+            lucide.createIcons();
 
             const menuBtn = document.getElementById('mobile-menu-btn');
             const mobileMenu = document.getElementById('mobile-menu');
@@ -890,17 +906,6 @@
                 link.addEventListener('click', () => {
                     mobileMenu.classList.add('hidden');
                 });
-            });
-
-            const form = document.getElementById('contact-form');
-            const toast = document.getElementById('toast-msg');
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                toast.classList.remove('hidden');
-                form.reset();
-                setTimeout(() => {
-                    toast.classList.add('hidden');
-                }, 4000);
             });
         };
     </script>
